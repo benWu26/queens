@@ -11,9 +11,9 @@ type cellType = {
 
 // props that need to be passed in when creating a Cell component
 type cellPropType = {
-    row: number,
-    column: number,
-    cell: cellType
+    key: number
+    cell: cellType,
+    updatePlayerStatus: () => void
 }
 
 // type for a board, which is a 2D array of cells
