@@ -18,19 +18,19 @@ function Cell(props: cellPropType) {
     console.log("cell re-rendered!");
 
     return (
-        <div className="cell" style={{ backgroundColor: colors[props.cell.color] }} onClick={
+        <div className="cell" style={{ backgroundColor: colors[props.color] }} onClick={
             () => {
                 props.updatePlayerStatus()
             }
         }>
-            {symbols[props.cell.playerStatus]}
+            {symbols[props.playerStatus]}
         </div>
     )
 }
 
 export default memo(Cell, (prevProps, nextProps) => {
     return (
-        prevProps.cell.playerStatus === nextProps.cell.playerStatus
+        prevProps.playerStatus === nextProps.playerStatus
     );
 });
 
