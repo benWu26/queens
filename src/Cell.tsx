@@ -1,4 +1,5 @@
 import { cellPropType } from './types';
+import { memo } from 'react';
 import dot from './assets/dot.svg';
 import crown from './assets/crown.svg';
 
@@ -14,6 +15,7 @@ const colors = ["blue", "gray", "red", "yellow", "green", "purple", "orange", "p
 
 // react component for an individual cell
 function Cell(props: cellPropType) {
+    console.log("cell re-rendered!");
 
     return (
         <div className="cell" style={{ backgroundColor: colors[props.cell.color] }} onClick={
@@ -26,5 +28,9 @@ function Cell(props: cellPropType) {
     )
 }
 
-export default Cell;
+export default memo(Cell, (prevProps, nextProps) => {
+    return (
+        prevProps.cell.playerStatus === nextProps.cell.playerStatus
+    );
+});
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Cell from "./Cell";
 import { cellType, boardType, playerStatusType } from "./types"
 
@@ -37,14 +37,14 @@ function Board() {
 
 
     // updates the board when a cell is clicked
-    const onCellClick = (rowIndex: number, columnIndex: number): void => {
+    const onCellClick = useCallback((rowIndex: number, columnIndex: number): void => {
         setBoard((b): boardType => {
             const newBoard: boardType = JSON.parse(JSON.stringify(b));
             const currentStatus = newBoard[rowIndex][columnIndex].playerStatus;
             newBoard[rowIndex][columnIndex].playerStatus = playerStatusTransitions[currentStatus];
             return newBoard;
         })
-    }
+    }, [])
 
     return (
         // style board to be an nxn grid
