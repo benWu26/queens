@@ -1,14 +1,15 @@
 // status of each individual cell
 type playerStatusType = "valid" | "invalid" | "star"
 type realStatusType = "invalid" | "star"
-type causeType = null | "human" | [number, number]
+type coordinateType = [number, number]
+type causesType = ("human" | coordinateType)[]
 
 // type for cells
 type cellType = {
     color: number,
     playerStatus: playerStatusType,
     realStatus: realStatusType,
-    cause: causeType,
+    causes: causesType,
 }
 
 // props that need to be passed in when creating a Cell component
