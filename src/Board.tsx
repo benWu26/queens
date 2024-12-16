@@ -32,11 +32,17 @@ const sampleBoard: boardType = sampleColorMap.map(row => row.map((c): cellType =
     }
 }))
 
+const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellType) => {
+    if (cell.playerStatus !== "star") {
+        cell.playerStatus = "invalid";
+        cell.causes.push([rowIndex, columnIndex]);
+    }
+}
+
 const invalidateCellsInRow = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
     board[rowIndex].forEach((cell, cidx) => {
-        if (cidx !== columnIndex && cell.playerStatus !== "star") {
-            cell.playerStatus = "invalid";
-            cell.causes.push([rowIndex, columnIndex])
+        if (cidx !== columnIndex) {
+            autoInvalidateCell(rowIndex, columnIndex, cell);
         }
     })
 }
@@ -44,9 +50,8 @@ const invalidateCellsInRow = (rowIndex: number, columnIndex: number, board: cell
 const invalidateCellsInColumn = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
     // invalidate everything in same column
     board.forEach((row, ridx) => {
-        if (ridx !== rowIndex && row[columnIndex].playerStatus !== "star") {
-            row[columnIndex].playerStatus = "invalid";
-            row[columnIndex].causes.push([rowIndex, columnIndex]);
+        if (ridx !== rowIndex) {
+            autoInvalidateCell(rowIndex, columnIndex, row[columnIndex]);
         }
     })
 }
@@ -57,10 +62,7 @@ const invalidateDiagonalCells = (rowIndex: number, columnIndex: number, board: c
         const ridx = rowIndex + drow;
         const cidx = columnIndex + dcol;
         if (ridx >= 0 && ridx < board.length && cidx >= 0 && cidx < board.length) {
-            if (board[ridx][cidx].playerStatus !== "star") {
-                board[ridx][cidx].playerStatus = "invalid";
-                board[ridx][cidx].causes.push([rowIndex, columnIndex]);
-            }
+            autoInvalidateCell(rowIndex, columnIndex, board[ridx][cidx]);
         }
     })
 }
@@ -68,15 +70,16 @@ const invalidateDiagonalCells = (rowIndex: number, columnIndex: number, board: c
 const invalidateCellsOfSameColor = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
     board.forEach((row, ridx) => {
         row.forEach((cell, cidx) => {
-            if (cell.color === board[rowIndex][columnIndex].color && cell.playerStatus !== "star") {
+            if (cell.color === board[rowIndex][columnIndex].color) {
                 if (ridx !== rowIndex || cidx !== columnIndex) {
-                    cell.playerStatus = "invalid";
-                    cell.causes.push([rowIndex, columnIndex]);
+                    autoInvalidateCell(rowIndex, columnIndex, cell);
                 }
             }
         })
     })
 }
+
+
 
 
 // react component of the game board
