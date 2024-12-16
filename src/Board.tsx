@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 import Cell from "./Cell";
 import { cellType, boardType, playerStatusType } from "./types"
 import _ from "lodash";
+import rfdc from 'rfdc';
+const clone = rfdc();
 
 // status transitions when a player clicks on a cell
 const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
@@ -37,6 +39,17 @@ const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellTyp
         cell.playerStatus = "invalid";
         cell.causes.push([rowIndex, columnIndex]);
     }
+}
+
+const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: boardType) => {
+    board.forEach((row) => {
+        row.forEach((cell) => {
+            cell.causes = cell.causes.filter(c => !(_.isEqual(c, [rowIndex, columnIndex])))
+            if (cell.causes.length === 0 && cell.playerStatus === "invalid") {
+                cell.playerStatus = "valid";
+            }
+        })
+    })
 }
 
 const invalidateCellsInRow = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
@@ -79,8 +92,37 @@ const invalidateCellsOfSameColor = (rowIndex: number, columnIndex: number, board
     })
 }
 
+const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const newBoard: boardType = clone(board);
+    const clickedCell = newBoard[rowIndex][columnIndex];
+    const currentStatus = clickedCell.playerStatus;
+    const nextStatus = playerStatusTransitions[currentStatus];
+    clickedCell.playerStatus = nextStatus;
 
+    if (nextStatus === "invalid") { // transition from valid to invalid
+        clickedCell.playerStatus = "invalid";
+        clickedCell.causes.push("human");
+    } else if (nextStatus === "star") { // transition from invalid to star
+        clickedCell.causes = [];
 
+        // invalidate everything in same row
+        invalidateCellsInRow(rowIndex, columnIndex, newBoard);
+
+        // invalidate everything in same column
+        invalidateCellsInColumn(rowIndex, columnIndex, newBoard);
+
+        // invalidates same-colored cells
+        invalidateCellsOfSameColor(rowIndex, columnIndex, newBoard);
+
+        // invalidate anything diagonally touching the clicked cell
+        invalidateDiagonalCells(rowIndex, columnIndex, newBoard);
+
+    } else { // transition from star to valid
+        removeInvalidationCause(rowIndex, columnIndex, newBoard);
+    }
+
+    return newBoard;
+}
 
 // react component of the game board
 function Board() {
@@ -89,44 +131,7 @@ function Board() {
 
     // updates the board when a cell is clicked
     const onCellClick = useCallback((rowIndex: number, columnIndex: number): void => {
-        setBoard((b): boardType => {
-            const newBoard: boardType = JSON.parse(JSON.stringify(b));
-            const clickedCell = newBoard[rowIndex][columnIndex];
-            const currentStatus = clickedCell.playerStatus;
-            const nextStatus = playerStatusTransitions[currentStatus];
-            clickedCell.playerStatus = nextStatus;
-
-            if (nextStatus === "invalid") { // transition from valid to invalid
-                clickedCell.playerStatus = "invalid";
-                clickedCell.causes.push("human");
-            } else if (nextStatus === "star") { // transition from invalid to star
-                clickedCell.causes = [];
-
-                // invalidate everything in same row
-                invalidateCellsInRow(rowIndex, columnIndex, newBoard);
-
-                // invalidate everything in same column
-                invalidateCellsInColumn(rowIndex, columnIndex, newBoard);
-
-                // invalidates same-colored cells
-                invalidateCellsOfSameColor(rowIndex, columnIndex, newBoard);
-
-                // invalidate anything diagonally touching the clicked cell
-                invalidateDiagonalCells(rowIndex, columnIndex, newBoard);
-
-            } else { // transition from star to valid
-                newBoard.forEach((row) => {
-                    row.forEach((cell) => {
-                        cell.causes = cell.causes.filter(c => !(_.isEqual(c, [rowIndex, columnIndex])))
-                        if (cell.causes.length === 0 && cell.playerStatus === "invalid") {
-                            cell.playerStatus = "valid";
-                        }
-                    })
-                })
-            }
-
-            return newBoard;
-        })
+        setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b));
     }, [])
 
     return (
