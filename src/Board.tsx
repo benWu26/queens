@@ -14,11 +14,31 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
 }
 
 /**
- * Sets cell.playerStatus to "invalid" if it's not already "star", and adds the given coordinates to cell.causes.
+ * Given a board, and the coordinates of a cell that a player is clicking on, this function will
+ * return a Set of all cells in the board that are either in the same row, column, or color group
+ * (but not in the same row and column) as the given cell.
  * @param {number} rowIndex
  * @param {number} columnIndex
- * @param {cellType} cell
+ * @param {boardType} board
+ * @returns {Set<cellType>}
  */
+const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const invalidCells = new Set<cellType>();
+    board.forEach((row, ridx) => {
+        row.forEach((cell, cidx) => {
+            if ((ridx === rowIndex) !== (cidx === columnIndex)) {
+                invalidCells.add(cell);
+            }
+            if ((ridx + 1 === rowIndex || ridx - 1 === rowIndex) && (cidx + 1 === columnIndex || cidx - 1 === columnIndex)) {
+                invalidCells.add(cell);
+            }
+            if (cell.color === board[rowIndex][columnIndex].color && (ridx !== rowIndex || cidx !== columnIndex)) {
+                invalidCells.add(cell);
+            }
+        })
+    })
+    return invalidCells;
+}
 
 /**
  * Sets cell.playerStatus to "invalid" if it's not already "star", and adds the given coordinates to cell.causes.
@@ -42,25 +62,6 @@ const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellTyp
  * @param {number} columnIndex
  * @param {boardType} board
  */
-
-const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => {
-    const invalidCells = new Set<cellType>();
-    board.forEach((row, ridx) => {
-        row.forEach((cell, cidx) => {
-            if ((ridx === rowIndex) !== (cidx === columnIndex)) {
-                invalidCells.add(cell);
-            }
-            if ((ridx + 1 === rowIndex || ridx - 1 === rowIndex) && (cidx + 1 === columnIndex || cidx - 1 === columnIndex)) {
-                invalidCells.add(cell);
-            }
-            if (cell.color === board[rowIndex][columnIndex].color && (ridx !== rowIndex || cidx !== columnIndex)) {
-                invalidCells.add(cell);
-            }
-        })
-    })
-    return invalidCells;
-
-}
 const invalidateCells = (rowIndex: number, columnIndex: number, board: boardType) => {
     const invalidCells = getInvalidCells(rowIndex, columnIndex, board);
     invalidCells.forEach((cell) => {
@@ -76,6 +77,7 @@ const invalidateCells = (rowIndex: number, columnIndex: number, board: boardType
  * @param {number} columnIndex
  * @param {boardType} board
  */
+
 const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: boardType) => {
     board.forEach((row) => {
         row.forEach((cell) => {
@@ -119,6 +121,25 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     return newBoard;
 }
 
+// VALIDATING SOLUTIONS
+const validateSolution = (board: boardType) => {
+    let numStars = 0;
+    for (let [rowIndex, row] of board.entries()) {
+        for (let [columnIndex, cell] of row.entries()) {
+            if (cell.playerStatus === "star") {
+                numStars++;
+                const invalidCells = getInvalidCells(rowIndex, columnIndex, board);
+                for (let c of invalidCells) {
+                    if (c.playerStatus === "star") {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return (numStars === board.length) ? true : false;
+}
+
 // SAMPLE MAP + BOARD
 // maps out the color of each cell on the board
 const sampleColorMap = [
@@ -156,21 +177,24 @@ function Board() {
 
     return (
         // style board to be an nxn grid
-        <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties}>
-            {
-                // 2 layers of mapping
-                board.map((row, rowIndex) => row.map((cell, columnIndex) => {
-                    // cell props:
-                    // key (calculated by treating the 2d array as a 1d array)
-                    // cell: cellType
-                    // updatePlayerStatus: called when the cell is clicked
-                    return <Cell key={rowIndex * board.length + columnIndex}
-                        color={cell["color"]}
-                        playerStatus={cell["playerStatus"]}
-                        updatePlayerStatus={() => onCellClick(rowIndex, columnIndex)}></Cell>
-                }))
-            }
-        </div>
+        <>
+            <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties}>
+                {
+                    // 2 layers of mapping
+                    board.map((row, rowIndex) => row.map((cell, columnIndex) => {
+                        // cell props:
+                        // key (calculated by treating the 2d array as a 1d array)
+                        // cell: cellType
+                        // updatePlayerStatus: called when the cell is clicked
+                        return <Cell key={rowIndex * board.length + columnIndex}
+                            color={cell["color"]}
+                            playerStatus={cell["playerStatus"]}
+                            updatePlayerStatus={() => onCellClick(rowIndex, columnIndex)}></Cell>
+                    }))
+                }
+            </div>
+            <p>{validateSolution(board) ? "complete" : "incomplete"}</p>
+        </>
     )
 }
 
