@@ -17,7 +17,6 @@ type cellPropType = {
     key: number,
     color: number,
     playerStatus: playerStatusType,
-    realStatus: realStatusType,
     updatePlayerStatus: () => void
 }
 

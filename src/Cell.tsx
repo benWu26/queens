@@ -13,7 +13,11 @@ const symbols = {
 // for mapping colors to numbers (good for customization later!)
 const colors = ["blue", "gray", "red", "yellow", "green", "purple", "orange", "pink"]
 
-// react component for an individual cell
+/**
+ * React component for an individual cell
+ * @param {cellPropType} props
+ * @returns {JSX.Element}
+ */
 function Cell(props: cellPropType) {
     console.log("cell re-rendered!");
 
@@ -23,6 +27,7 @@ function Cell(props: cellPropType) {
                 props.updatePlayerStatus()
             }
         }>
+            {/* What to display in the cell depending on the playerStatus */}
             {symbols[props.playerStatus]}
         </div>
     )

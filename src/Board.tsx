@@ -19,6 +19,13 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
  * @param {number} columnIndex
  * @param {cellType} cell
  */
+
+/**
+ * Sets cell.playerStatus to "invalid" if it's not already "star", and adds the given coordinates to cell.causes.
+ * @param {number} rowIndex
+ * @param {number} columnIndex
+ * @param {cellType} cell
+ */
 const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellType) => {
     if (cell.playerStatus !== "star") {
         cell.playerStatus = "invalid";
@@ -35,7 +42,8 @@ const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellTyp
  * @param {number} columnIndex
  * @param {boardType} board
  */
-const invalidateCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+
+const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => {
     const invalidCells = new Set<cellType>();
     board.forEach((row, ridx) => {
         row.forEach((cell, cidx) => {
@@ -50,6 +58,11 @@ const invalidateCells = (rowIndex: number, columnIndex: number, board: boardType
             }
         })
     })
+    return invalidCells;
+
+}
+const invalidateCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const invalidCells = getInvalidCells(rowIndex, columnIndex, board);
     invalidCells.forEach((cell) => {
         autoInvalidateCell(rowIndex, columnIndex, cell);
     })
@@ -93,7 +106,6 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     clickedCell.playerStatus = nextStatus;
 
     if (nextStatus === "invalid") { // transition from valid to invalid
-        clickedCell.playerStatus = "invalid";
         clickedCell.causes.push("human");
     } else if (nextStatus === "star") { // transition from invalid to star
         clickedCell.causes = [];
@@ -154,7 +166,6 @@ function Board() {
                     // updatePlayerStatus: called when the cell is clicked
                     return <Cell key={rowIndex * board.length + columnIndex}
                         color={cell["color"]}
-                        realStatus={cell["realStatus"]}
                         playerStatus={cell["playerStatus"]}
                         updatePlayerStatus={() => onCellClick(rowIndex, columnIndex)}></Cell>
                 }))
