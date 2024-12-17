@@ -5,6 +5,7 @@ import _ from "lodash";
 import rfdc from 'rfdc';
 const clone = rfdc();
 
+// HELPER STUFF
 // status transitions when a player clicks on a cell
 const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
     "valid": "invalid",
@@ -12,6 +13,101 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
     "star": "valid"
 }
 
+/**
+ * Sets cell.playerStatus to "invalid" if it's not already "star", and adds the given coordinates to cell.causes.
+ * @param {number} rowIndex
+ * @param {number} columnIndex
+ * @param {cellType} cell
+ */
+const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellType) => {
+    if (cell.playerStatus !== "star") {
+        cell.playerStatus = "invalid";
+        cell.causes.push([rowIndex, columnIndex]);
+    }
+}
+
+/**
+ * Given a board, and the coordinates of a cell that a player is clicking on, this function will
+ * set the playerStatus of all cells in the board that are either in the same row, column, or color
+ * group (but not in the same row and column) to "invalid", and add the given coordinates to their
+ * causes.
+ * @param {number} rowIndex
+ * @param {number} columnIndex
+ * @param {boardType} board
+ */
+const invalidateCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const invalidCells = new Set<cellType>();
+    board.forEach((row, ridx) => {
+        row.forEach((cell, cidx) => {
+            if ((ridx === rowIndex) !== (cidx === columnIndex)) {
+                invalidCells.add(cell);
+            }
+            if ((ridx + 1 === rowIndex || ridx - 1 === rowIndex) && (cidx + 1 === columnIndex || cidx - 1 === columnIndex)) {
+                invalidCells.add(cell);
+            }
+            if (cell.color === board[rowIndex][columnIndex].color && (ridx !== rowIndex || cidx !== columnIndex)) {
+                invalidCells.add(cell);
+            }
+        })
+    })
+    invalidCells.forEach((cell) => {
+        autoInvalidateCell(rowIndex, columnIndex, cell);
+    })
+}
+
+/**
+ * Given a board, and the coordinates of a cell that is being un-invalidated, this function will
+ * remove the given coordinates from the causes of all other cells in the board.
+ * If a cell has no remaining causes, it will be set to "valid" status.
+ * @param {number} rowIndex
+ * @param {number} columnIndex
+ * @param {boardType} board
+ */
+const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: boardType) => {
+    board.forEach((row) => {
+        row.forEach((cell) => {
+            cell.causes = cell.causes.filter(c => !(_.isEqual(c, [rowIndex, columnIndex])))
+            if (cell.causes.length === 0 && cell.playerStatus === "invalid") {
+                cell.playerStatus = "valid";
+            }
+        })
+    })
+}
+
+/**
+ * Given a board, and the coordinates of a cell that a player is clicking on, this function will
+ * update the board based on the rules of the game. If the cell is currently valid, it will be
+ * set to "invalid". If the cell is currently invalid, it will be set to "star", and all other
+ * cells in the same row, column, color, or diagonal will be set to "invalid". If the cell is
+ * currently a star, it will be set to "valid", and all cells that were invalidated SOLELY because of
+ * it will be set back to "valid". This function returns the updated board.
+ * @param {number} rowIndex
+ * @param {number} columnIndex
+ * @param {boardType} board
+ */
+const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const newBoard: boardType = clone(board);
+    const clickedCell = newBoard[rowIndex][columnIndex];
+    const currentStatus = clickedCell.playerStatus;
+    const nextStatus = playerStatusTransitions[currentStatus];
+    clickedCell.playerStatus = nextStatus;
+
+    if (nextStatus === "invalid") { // transition from valid to invalid
+        clickedCell.playerStatus = "invalid";
+        clickedCell.causes.push("human");
+    } else if (nextStatus === "star") { // transition from invalid to star
+        clickedCell.causes = [];
+
+        invalidateCells(rowIndex, columnIndex, newBoard);
+
+    } else { // transition from star to valid
+        removeInvalidationCause(rowIndex, columnIndex, newBoard);
+    }
+
+    return newBoard;
+}
+
+// SAMPLE MAP + BOARD
 // maps out the color of each cell on the board
 const sampleColorMap = [
     [0, 0, 0, 1, 1, 1, 1, 1],
@@ -34,95 +130,7 @@ const sampleBoard: boardType = sampleColorMap.map(row => row.map((c): cellType =
     }
 }))
 
-const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellType) => {
-    if (cell.playerStatus !== "star") {
-        cell.playerStatus = "invalid";
-        cell.causes.push([rowIndex, columnIndex]);
-    }
-}
 
-const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: boardType) => {
-    board.forEach((row) => {
-        row.forEach((cell) => {
-            cell.causes = cell.causes.filter(c => !(_.isEqual(c, [rowIndex, columnIndex])))
-            if (cell.causes.length === 0 && cell.playerStatus === "invalid") {
-                cell.playerStatus = "valid";
-            }
-        })
-    })
-}
-
-const invalidateCellsInRow = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
-    board[rowIndex].forEach((cell, cidx) => {
-        if (cidx !== columnIndex) {
-            autoInvalidateCell(rowIndex, columnIndex, cell);
-        }
-    })
-}
-
-const invalidateCellsInColumn = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
-    // invalidate everything in same column
-    board.forEach((row, ridx) => {
-        if (ridx !== rowIndex) {
-            autoInvalidateCell(rowIndex, columnIndex, row[columnIndex]);
-        }
-    })
-}
-
-const invalidateDiagonalCells = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
-    const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
-    directions.forEach(([drow, dcol]) => {
-        const ridx = rowIndex + drow;
-        const cidx = columnIndex + dcol;
-        if (ridx >= 0 && ridx < board.length && cidx >= 0 && cidx < board.length) {
-            autoInvalidateCell(rowIndex, columnIndex, board[ridx][cidx]);
-        }
-    })
-}
-
-const invalidateCellsOfSameColor = (rowIndex: number, columnIndex: number, board: cellType[][]) => {
-    board.forEach((row, ridx) => {
-        row.forEach((cell, cidx) => {
-            if (cell.color === board[rowIndex][columnIndex].color) {
-                if (ridx !== rowIndex || cidx !== columnIndex) {
-                    autoInvalidateCell(rowIndex, columnIndex, cell);
-                }
-            }
-        })
-    })
-}
-
-const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => {
-    const newBoard: boardType = clone(board);
-    const clickedCell = newBoard[rowIndex][columnIndex];
-    const currentStatus = clickedCell.playerStatus;
-    const nextStatus = playerStatusTransitions[currentStatus];
-    clickedCell.playerStatus = nextStatus;
-
-    if (nextStatus === "invalid") { // transition from valid to invalid
-        clickedCell.playerStatus = "invalid";
-        clickedCell.causes.push("human");
-    } else if (nextStatus === "star") { // transition from invalid to star
-        clickedCell.causes = [];
-
-        // invalidate everything in same row
-        invalidateCellsInRow(rowIndex, columnIndex, newBoard);
-
-        // invalidate everything in same column
-        invalidateCellsInColumn(rowIndex, columnIndex, newBoard);
-
-        // invalidates same-colored cells
-        invalidateCellsOfSameColor(rowIndex, columnIndex, newBoard);
-
-        // invalidate anything diagonally touching the clicked cell
-        invalidateDiagonalCells(rowIndex, columnIndex, newBoard);
-
-    } else { // transition from star to valid
-        removeInvalidationCause(rowIndex, columnIndex, newBoard);
-    }
-
-    return newBoard;
-}
 
 // react component of the game board
 function Board() {
@@ -136,7 +144,7 @@ function Board() {
 
     return (
         // style board to be an nxn grid
-        <div className="board" style={{ gridTemplateColumns: `repeat(${board.length}, 1fr)`, gridTemplateRows: `repeat(${board.length}, 1fr)` }}>
+        <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties}>
             {
                 // 2 layers of mapping
                 board.map((row, rowIndex) => row.map((cell, columnIndex) => {

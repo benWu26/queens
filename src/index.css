@@ -5,9 +5,15 @@
 
 .board {
   background-color: black;
-  display: grid;
+
   width: fit-content;
+
+  display: grid;
   gap: 1px;
+  grid-template-columns: var(--grid-size, 1fr);
+  grid-template-rows: var(--grid-size, 1fr);
+
+
   border-style: solid;
   border-color: black;
 }
