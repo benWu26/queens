@@ -5,6 +5,8 @@ import _ from "lodash";
 import rfdc from 'rfdc';
 const clone = rfdc();
 
+import sampleBoard from "./sampleBoard";
+
 // HELPER STUFF
 // status transitions when a player clicks on a cell
 const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
@@ -146,7 +148,14 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     return newBoard;
 }
 
-// VALIDATING SOLUTIONS
+
+    /**
+     * Validates whether a given board is a solution to the puzzle.
+     * To be a solution, the board must have exactly one star in each row.
+     * Additionally, no two cells in the same row, column, or color group can both be stars.
+     * @param {boardType} board
+     * @returns {boolean} whether the given board is a solution
+     */
 const validateSolution = (board: boardType) => {
     let numStars = 0;
     for (let [rowIndex, row] of board.entries()) {
@@ -164,30 +173,6 @@ const validateSolution = (board: boardType) => {
     }
     return (numStars === board.length) ? true : false;
 }
-
-// SAMPLE MAP + BOARD
-// maps out the color of each cell on the board
-const sampleColorMap = [
-    [0, 0, 0, 0, 0, 1, 1, 1],
-    [0, 0, 2, 2, 0, 0, 1, 1],
-    [0, 0, 0, 2, 2, 2, 1, 1],
-    [0, 0, 2, 2, 2, 3, 1, 1],
-    [0, 4, 2, 2, 3, 3, 3, 1],
-    [5, 5, 6, 6, 3, 3, 3, 1],
-    [5, 5, 5, 6, 6, 7, 1, 1],
-    [5, 5, 5, 6, 6, 7, 7, 7]
-]
-
-// takes the color map and returns a 2D array of cells
-const sampleBoard: boardType = sampleColorMap.map(row => row.map((c): cellType => {
-    return {
-        color: c,
-        playerStatus: "valid",
-        realStatus: "invalid",
-        causes: []
-    }
-}))
-
 
 
 // react component of the game board
@@ -223,8 +208,8 @@ function Board() {
                         // cell: cellType
                         // updatePlayerStatus: called when the cell is clicked
                         return <Cell key={rowIndex * board.length + columnIndex}
-                            color={cell["color"]}
-                            playerStatus={cell["playerStatus"]}
+                            color={cell.color}
+                            playerStatus={cell.playerStatus}
                             updatePlayerStatusClick={() => onCellClick(rowIndex, columnIndex)}
                             updatePlayerStatusDrag={() => onDrag(rowIndex, columnIndex)}
                             ></Cell>
