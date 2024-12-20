@@ -17,7 +17,8 @@ type cellPropType = {
     key: number,
     color: number,
     playerStatus: playerStatusType,
-    updatePlayerStatus: () => void
+    updatePlayerStatusClick: () => void,
+    updatePlayerStatusDrag: () => void
 }
 
 // type for a board, which is a 2D array of cells

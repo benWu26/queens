@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
 import { cellType, boardType, playerStatusType } from "./types"
 import _ from "lodash";
@@ -62,7 +62,7 @@ const autoInvalidateCell = (rowIndex: number, columnIndex: number, cell: cellTyp
  * @param {number} columnIndex
  * @param {boardType} board
  */
-const invalidateCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+const autoInvalidateCells = (rowIndex: number, columnIndex: number, board: boardType) => {
     const invalidCells = getInvalidCells(rowIndex, columnIndex, board);
     invalidCells.forEach((cell) => {
         autoInvalidateCell(rowIndex, columnIndex, cell);
@@ -89,6 +89,31 @@ const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: b
     })
 }
 
+
+/**
+ * Given a board, and the coordinates of a cell that a player is dragging over, this function will
+ * update the board based on the rules of the game. If the cell is currently valid, it will be
+ * set to "invalid" status, and the cause will be labeled as "human". If the cell is currently
+ * invalid or a star, it will be left alone. This is used when a player is dragging the mouse
+ * over the board, and we want to invalidate cells as the mouse moves over them.
+ * @param {number} rowIndex
+ * @param {number} columnIndex
+ * @param {boardType} board
+ * @returns {boardType}
+ */
+const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boardType): boardType => {
+    console.log("invalidateCellOnDrag called")
+    if (board[rowIndex][columnIndex].playerStatus === "valid") {
+        console.log("if branch taken");
+        const newBoard = clone(board);
+        newBoard[rowIndex][columnIndex].playerStatus = "invalid"
+        newBoard[rowIndex][columnIndex].causes.push("human");
+        return newBoard;
+    } else {
+        return board;
+    }
+}
+
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
  * update the board based on the rules of the game. If the cell is currently valid, it will be
@@ -112,7 +137,7 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     } else if (nextStatus === "star") { // transition from invalid to star
         clickedCell.causes = [];
 
-        invalidateCells(rowIndex, columnIndex, newBoard);
+        autoInvalidateCells(rowIndex, columnIndex, newBoard);
 
     } else { // transition from star to valid
         removeInvalidationCause(rowIndex, columnIndex, newBoard);
@@ -143,14 +168,14 @@ const validateSolution = (board: boardType) => {
 // SAMPLE MAP + BOARD
 // maps out the color of each cell on the board
 const sampleColorMap = [
-    [0, 0, 0, 1, 1, 1, 1, 1],
-    [2, 0, 2, 1, 1, 1, 1, 1],
-    [2, 0, 2, 1, 1, 1, 1, 1],
-    [2, 2, 2, 3, 3, 3, 1, 4],
-    [2, 5, 5, 3, 5, 3, 3, 4],
-    [2, 2, 5, 5, 5, 3, 4, 4],
-    [2, 2, 5, 6, 6, 6, 4, 4],
-    [2, 2, 7, 6, 6, 4, 4, 4]
+    [0, 0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 2, 2, 0, 0, 1, 1],
+    [0, 0, 0, 2, 2, 2, 1, 1],
+    [0, 0, 2, 2, 2, 3, 1, 1],
+    [0, 4, 2, 2, 3, 3, 3, 1],
+    [5, 5, 6, 6, 3, 3, 3, 1],
+    [5, 5, 5, 6, 6, 7, 1, 1],
+    [5, 5, 5, 6, 6, 7, 7, 7]
 ]
 
 // takes the color map and returns a 2D array of cells
@@ -170,15 +195,26 @@ function Board() {
     // using board as a state variable
     const [board, setBoard] = useState(sampleBoard);
 
+    // ref variable for detecting if mouse is pressed or not
+    const mouseDownRef = useRef(false);
+
     // updates the board when a cell is clicked
     const onCellClick = useCallback((rowIndex: number, columnIndex: number): void => {
         setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b));
     }, [])
 
+    // when the mouse is dragged over a cell, invalidates the cell if the mouse is pressed
+    const onDrag = useCallback((rowIndex: number, columnIndex: number): void => {
+        if (mouseDownRef.current) {
+            setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
+        }
+        
+    }, []);
+
     return (
         // style board to be an nxn grid
         <>
-            <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties}>
+            <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties} onMouseDown={() => {mouseDownRef.current = true}} onMouseUp={() => {mouseDownRef.current = false}}>
                 {
                     // 2 layers of mapping
                     board.map((row, rowIndex) => row.map((cell, columnIndex) => {
@@ -189,7 +225,10 @@ function Board() {
                         return <Cell key={rowIndex * board.length + columnIndex}
                             color={cell["color"]}
                             playerStatus={cell["playerStatus"]}
-                            updatePlayerStatus={() => onCellClick(rowIndex, columnIndex)}></Cell>
+                            updatePlayerStatusClick={() => onCellClick(rowIndex, columnIndex)}
+                            updatePlayerStatusDrag={() => onDrag(rowIndex, columnIndex)}
+                            ></Cell>
+                            
                     }))
                 }
             </div>

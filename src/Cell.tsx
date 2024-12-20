@@ -1,5 +1,5 @@
 import { cellPropType } from './types';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import dot from './assets/dot.svg';
 import crown from './assets/crown.svg';
 
@@ -11,20 +11,29 @@ const symbols = {
 }
 
 // for mapping colors to numbers (good for customization later!)
-const colors = ["blue", "gray", "red", "yellow", "green", "purple", "orange", "pink"]
+const colors = ["skyblue", "gray", "red", "yellow", "green", "purple", "orange", "pink"]
 
 /**
  * React component for an individual cell
  * @param {cellPropType} props
  * @returns {JSX.Element}
  */
+
+
+
 function Cell(props: cellPropType) {
     console.log("cell re-rendered!");
 
     return (
-        <div className="cell" style={{ backgroundColor: colors[props.color] }} onClick={
+        <div className="cell" style={{ backgroundColor: colors[props.color] }} 
+        onMouseDown={
             () => {
-                props.updatePlayerStatus()
+                props.updatePlayerStatusClick()
+            }
+        } 
+        onMouseOver={
+            () => {
+                props.updatePlayerStatusDrag();
             }
         }>
             {/* What to display in the cell depending on the playerStatus */}
