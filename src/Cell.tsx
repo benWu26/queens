@@ -11,7 +11,7 @@ const symbols = {
 }
 
 // for mapping colors to numbers (good for customization later!)
-const colors = ["skyblue", "gray", "red", "yellow", "green", "purple", "orange", "pink"]
+const colors = ["skyblue", "gray", "red", "yellow", "green", "purple", "orange", "pink", "brown", "blue", "cyan", "magenta"]
 
 /**
  * React component for an individual cell

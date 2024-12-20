@@ -3,9 +3,9 @@ import Cell from "./Cell";
 import {boardType} from "./types"
 import _ from "lodash";
 import sampleBoard from "./sampleBoard";
-import { updateBoard, invalidateCellOnDrag, validateSolution } from "./BoardLogic";
+import { updateBoard, invalidateCellOnDrag, validateSolution, solvePuzzle } from "./BoardLogic";
 
-
+console.log(solvePuzzle(sampleBoard));
 // react component of the game board
 function Board() {
     // using board as a state variable

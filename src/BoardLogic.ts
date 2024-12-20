@@ -176,4 +176,42 @@ const validateSolution = (board: boardType) => {
     return (numStars === board.length) ? true : false;
 }
 
-export {validateSolution, invalidateCellOnDrag, updateBoard}
+
+    /**
+     * Recursive step of the solvePuzzle algorithm.
+     * @param {boardType} board the current state of the board
+     * @param {number} ridx the row index to try placing a star in
+     * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
+     */
+const solvePuzzleRecursiveStep = (board: boardType, ridx: number) : boardType | false => {
+    if (ridx === board.length) {
+        return board;
+    }
+
+    for (const [cidx, cell] of board[ridx].entries()) {
+        if (cell.playerStatus === "valid") {
+            cell.playerStatus = "star";
+            autoInvalidateMultipleCells(ridx, cidx, board);
+            const v = solvePuzzleRecursiveStep(board, ridx+1);
+            if (v) return v;
+            removeInvalidationCause(ridx, cidx, board);
+            cell.playerStatus = "valid";
+        }
+    }
+
+    return false;
+}
+
+    /**
+     * Solves a given puzzle by placing stars in valid cells and trying to find a solution.
+     * The algorithm works by trying to place a star in each valid cell in the first row, then
+     * recursively trying to place a star in each valid cell in the next row, and so on.
+     * If the algorithm can't find a solution, it returns false.
+     * @param {boardType} board the puzzle to solve
+     * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
+     */
+const solvePuzzle = (board: boardType) => {
+    return solvePuzzleRecursiveStep(board, 0);
+}
+
+export {validateSolution, invalidateCellOnDrag, updateBoard, solvePuzzle}
