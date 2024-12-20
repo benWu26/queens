@@ -1,15 +1,15 @@
 import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
-import {boardType} from "./types"
+import {boardType, boardPropType} from "./types"
 import _ from "lodash";
-import sampleBoard from "./sampleBoard";
 import { updateBoard, invalidateCellOnDrag, validateSolution, solvePuzzle } from "./BoardLogic";
 
-console.log(solvePuzzle(sampleBoard));
-// react component of the game board
-function Board() {
+// // react component of the game board
+// console.log(solvePuzzle(sampleBoard))
+
+function Board(props: boardPropType) {
     // using board as a state variable
-    const [board, setBoard] = useState(sampleBoard);
+    const [board, setBoard] = useState(props.board);
 
     // ref variable for detecting if mouse is pressed or not
     const mouseDownRef = useRef(false);

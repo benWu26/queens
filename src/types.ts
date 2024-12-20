@@ -21,7 +21,11 @@ type cellPropType = {
     updatePlayerStatusDrag: () => void
 }
 
+type boardPropType = {
+    board: boardType
+}
+
 // type for a board, which is a 2D array of cells
 type boardType = cellType[][];
 
-export type { playerStatusType, realStatusType, cellType, cellPropType, boardType };
+export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType };
