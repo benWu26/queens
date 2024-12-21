@@ -18,9 +18,6 @@ const colors = ["skyblue", "gray", "red", "yellow", "green", "purple", "orange",
  * @param {cellPropType} props
  * @returns {JSX.Element}
  */
-
-
-
 function Cell(props: cellPropType) {
     console.log("cell re-rendered!");
 

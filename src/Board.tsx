@@ -13,6 +13,8 @@ function Board(props: boardPropType) {
 
     // ref variable for detecting if mouse is pressed or not
     const mouseDownRef = useRef(false);
+
+    
     const suppressMouseRef = useRef(false);
 
     // updates the board when a cell is clicked

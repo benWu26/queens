@@ -1,5 +1,3 @@
-import { useCallback, useState, useRef } from "react";
-import Cell from "./Cell";
 import { cellType, boardType, playerStatusType } from "./types"
 import _ from "lodash";
 import rfdc from 'rfdc';
@@ -183,23 +181,25 @@ const validateSolution = (board: boardType) => {
      * @param {number} ridx the row index to try placing a star in
      * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
      */
-const solvePuzzleRecursiveStep = (board: boardType, ridx: number) : boardType | false => {
+const solvePuzzleRecursiveStep = (board: boardType, ridx: number) : boardType[] => {
     if (ridx === board.length) {
-        return board;
+        return [board];
     }
+
+    const possibleSolutions: boardType[] = []
 
     for (const [cidx, cell] of board[ridx].entries()) {
         if (cell.playerStatus === "valid") {
             cell.playerStatus = "star";
             autoInvalidateMultipleCells(ridx, cidx, board);
-            const v = solvePuzzleRecursiveStep(board, ridx+1);
-            if (v) return v;
+            possibleSolutions.push(...solvePuzzleRecursiveStep(board, ridx+1));
+            
             removeInvalidationCause(ridx, cidx, board);
             cell.playerStatus = "valid";
         }
     }
 
-    return false;
+    return possibleSolutions;
 }
 
     /**
