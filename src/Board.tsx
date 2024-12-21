@@ -13,6 +13,7 @@ function Board(props: boardPropType) {
 
     // ref variable for detecting if mouse is pressed or not
     const mouseDownRef = useRef(false);
+    const suppressMouseRef = useRef(false);
 
     // updates the board when a cell is clicked
     const onCellClick = useCallback((rowIndex: number, columnIndex: number): void => {
@@ -21,7 +22,7 @@ function Board(props: boardPropType) {
 
     // when the mouse is dragged over a cell, invalidates the cell if the mouse is pressed
     const onDrag = useCallback((rowIndex: number, columnIndex: number): void => {
-        if (mouseDownRef.current) {
+        if (mouseDownRef.current && !suppressMouseRef.current) {
             setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
         }
         
@@ -30,7 +31,15 @@ function Board(props: boardPropType) {
     return (
         // style board to be an nxn grid
         <>
-            <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties} onMouseDown={() => {mouseDownRef.current = true}} onMouseUp={() => {mouseDownRef.current = false}}>
+            <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties} 
+            onMouseDown={() => {
+                suppressMouseRef.current = true;
+                mouseDownRef.current = true;
+                setTimeout(() => {
+                    suppressMouseRef.current = false;
+                }, 50);
+            }} 
+            onMouseUp={() => {mouseDownRef.current = false}}>
                 {
                     // 2 layers of mapping
                     board.map((row, rowIndex) => row.map((cell, columnIndex) => {
