@@ -2,11 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import Board from './Board.tsx'
-import sampleBoard from './sampleBoard.ts'
 import { solvePuzzle } from './BoardLogic.ts'
 import rfdc from 'rfdc'
 const clone = rfdc();
-import { createGraph, colorGraph, generateBoard } from './BoardLogic.ts'
+import {generateBoard } from './BoardGenerator.ts'
 
 let validPuzzleGenerated = false;
 let puzzleBoard;
