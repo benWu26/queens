@@ -5,18 +5,9 @@ import Board from './Board.tsx'
 import { solvePuzzle } from './BoardLogic.ts'
 import rfdc from 'rfdc'
 const clone = rfdc();
-import {generateBoard } from './BoardGenerator.ts'
+import {generateValidBoard, testGenerationSpeed, generateOneBoard } from './BoardGenerator.ts'
 
-let validPuzzleGenerated = false;
-let puzzleBoard;
-
-do {
-  puzzleBoard = generateBoard(8);
-    if (solvePuzzle(clone(puzzleBoard)).length === 1){
-      validPuzzleGenerated = true;
-    }
-} while (!validPuzzleGenerated)
-
+const puzzleBoard = generateValidBoard(9);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

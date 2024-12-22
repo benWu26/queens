@@ -29,6 +29,7 @@ type boardPropType = {
 type boardType = cellType[][];
 
 type nodeLabelType = {
+    size: number,
     cells: number[]
 }
 

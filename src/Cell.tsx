@@ -19,15 +19,15 @@ const colors = ["skyblue", "gray", "red", "yellow", "green", "purple", "orange",
  * @returns {JSX.Element}
  */
 function Cell(props: cellPropType) {
-    console.log("cell re-rendered!");
+    // console.log("cell re-rendered!");
 
     return (
         <div className="cell" style={{ backgroundColor: colors[props.color] }} 
         onMouseDown={
             () => {
-                props.updatePlayerStatusClick()
+                props.updatePlayerStatusClick();
             }
-        } 
+        }
         onMouseOver={
             () => {
                 props.updatePlayerStatusDrag();
