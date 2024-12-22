@@ -14,6 +14,22 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
     "star": "valid"
 }
 
+
+//create an array of tuples of [row, column, valid/invalid]
+interface event {//each event is a row, column, and validity
+    xCoord: number;
+    yCoord: number;
+    validity: playerStatusType;
+}
+type eventgroup = event[];  //for when a group of events happen in dragging(at least one event is needed)
+
+type eventstack = eventgroup[]; //creates a stack of event groups
+
+let eventStack: eventstack = []; //creates an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
+
+
+
+
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
  * return a Set of all cells in the board that are either in the same row, column, or color group
@@ -23,7 +39,7 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
  * @param {boardType} board
  * @returns {Set<cellType>}
  */
-const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => { //dots coming from queens
     const invalidCells = new Set<cellType>();
     board.forEach((row, ridx) => {
         row.forEach((cell, cidx) => {
@@ -105,6 +121,7 @@ const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: b
  */
 const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boardType): boardType => {
     console.log("invalidateCellOnDrag called")
+
     if (board[rowIndex][columnIndex].playerStatus === "valid") {
         console.log("if branch taken");
         const newBoard = clone(board);
@@ -115,6 +132,7 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
         return board;
     }
 }
+
 
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
@@ -127,12 +145,29 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
  * @param {number} columnIndex
  * @param {boardType} board
  */
-const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => {
-    const newBoard: boardType = clone(board);
+const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => { //UPDATE BOARD GETS CALLED WHEN CLICKED ONA A CELL
+    const newBoard: boardType = clone(board); 
     const clickedCell = newBoard[rowIndex][columnIndex];
     const currentStatus = clickedCell.playerStatus;
     const nextStatus = playerStatusTransitions[currentStatus];
     clickedCell.playerStatus = nextStatus;
+
+    const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+        xCoord: rowIndex,
+        yCoord: columnIndex,
+        validity: currentStatus,
+    };
+
+    //initlizize a group(this case itll just be a single event tho)
+    let singleEvent:eventgroup = [];
+
+    //add to eventgroup as a single shit
+    singleEvent.push(currentEvent);
+
+    //add the new group to the overall array
+    eventStack.push(singleEvent);
+
+
 
     if (nextStatus === "invalid") { // transition from valid to invalid
         clickedCell.causes.push("human");
@@ -146,6 +181,59 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     }
 
     return newBoard;
+}
+
+
+// ---------------------------- UNDO BUTTON LOGIC -------------------------------
+
+const undoEvent = (board: boardType) => { //you don't need x and y because its being read in the eventgroup
+    if(eventStack.length === 0 ){ //if empty, do nothing
+        return board;
+    }
+    else{ //if not, actually undo
+
+
+        //clone a new board
+        const newBoard: boardType = clone(board);
+    
+        //read latest event group
+        let currentEventGroup:eventgroup = eventStack[eventStack.length - 1];
+
+        //pop off the array
+        eventStack.pop();
+
+        for (let i = 0; i < currentEventGroup.length; i++) { //for each element in the event group
+            const rowIndex = currentEventGroup[i].xCoord;
+            const columnIndex = currentEventGroup[i].yCoord;
+
+            //grab the cell using the specific indeces
+            const cell = newBoard[rowIndex][columnIndex];
+
+            const undoState = currentEventGroup[i].validity;
+
+            cell.playerStatus = undoState;
+
+            //reads the undo state and turns it into what cell used to (along with the changes)
+            if(undoState === "invalid"){ 
+                cell.causes.push("human");
+                removeInvalidationCause(rowIndex, columnIndex, newBoard);
+            }
+            else if (undoState === "star") { 
+                cell.causes = [];
+                    
+                autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
+            }
+
+            else{
+                cell.causes = [];
+            }
+
+        }
+
+        //at the end return the new board
+        return newBoard;
+    }
+    
 }
 
 
@@ -216,4 +304,4 @@ const solvePuzzle = (board: boardType) => {
     return solvePuzzleRecursiveStep(board, 0);
 }
 
-export {validateSolution, invalidateCellOnDrag, updateBoard, solvePuzzle};
+export {validateSolution, invalidateCellOnDrag, updateBoard, solvePuzzle, undoEvent}

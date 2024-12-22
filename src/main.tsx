@@ -20,7 +20,7 @@ do {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Board board={puzzleBoard}></Board>
-    <p>{solvePuzzle(clone(puzzleBoard)).length}</p>
+    <Board board={sampleBoard}></Board>
+    <p>possible solutions: {solvePuzzle(clone(sampleBoard)).length}</p>
   </StrictMode>,
 )

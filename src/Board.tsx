@@ -2,7 +2,8 @@ import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
-import { updateBoard, invalidateCellOnDrag, validateSolution } from "./BoardLogic";
+import { updateBoard, invalidateCellOnDrag, validateSolution, solvePuzzle, undoEvent } from "./BoardLogic";
+
 
 
 function Board(props: boardPropType) {
@@ -27,6 +28,13 @@ function Board(props: boardPropType) {
         }
         
     }, []);
+
+
+    //BEN FUNCTION FOR UNDO
+    const onButtonClick = (): void => {
+        setBoard((b): boardType => undoEvent(b));
+    }
+
 
     return (
         // style board to be an nxn grid
@@ -58,6 +66,11 @@ function Board(props: boardPropType) {
                 }
             </div>
             <p>{validateSolution(board) ? "complete" : "incomplete"}</p>
+
+            {/* The Undo button */}
+            <button onClick = {onButtonClick}> 
+                UNDO
+            </button>
         </>
     )
 }
