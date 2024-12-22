@@ -21,7 +21,6 @@ interface event {//each event is a row, column, and validity
 }
 type eventgroup = event[];  //for when a group of events happen in dragging(at least one event is needed)
 
-
 type eventstack = eventgroup[]; //creates a stack of event groups
 
 let eventStack: eventstack = []; //craete an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
@@ -166,6 +165,7 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     eventStack.push(singleEvent);
 
 
+
     if (nextStatus === "invalid") { // transition from valid to invalid
         clickedCell.causes.push("human");
     } else if (nextStatus === "star") { // transition from invalid to star
@@ -178,6 +178,55 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     }
 
     return newBoard;
+}
+
+
+// ---------------------------- UNDO BUTTON LOGIC -------------------------------
+
+const undoEvent = (board: boardType) => { //you don't need x and y because its being read in the eventgroup
+    if(eventStack.length === 0 ){ //if empty, do nothing
+        return board;
+    }
+    else{ //if not, actually undo
+
+
+        //clone a new board
+        const newBoard: boardType = clone(board);
+    
+        //read latest event group
+        let currentEventGroup:eventgroup = eventStack[eventStack.length - 1];
+
+        //pop off the array
+        eventStack.pop();
+
+        for (let i = 0; i < currentEventGroup.length; i++) { //for each element in the event group
+            const rowIndex = currentEventGroup[i].xCoord;
+            const columnIndex = currentEventGroup[i].yCoord;
+
+            //grab the cell using the specific indeces
+            const cell = newBoard[rowIndex][columnIndex];
+
+            const undoState = currentEventGroup[i].validity;
+
+            //reads the undo state and turns it into what cell used to (along with the changes)
+            if(undoState === "Invalid"){ 
+                cell.causes.push("human");
+            }
+            else if (undoState === "star") { 
+                cell.causes = [];
+
+                autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
+            }
+
+            else{
+                removeInvalidationCause(rowIndex, columnIndex, newBoard);
+            }
+        }
+
+        //at the end return the new board
+        return newBoard;
+    }
+    
 }
 
 
@@ -248,4 +297,4 @@ const solvePuzzle = (board: boardType) => {
     return solvePuzzleRecursiveStep(board, 0);
 }
 
-export {validateSolution, invalidateCellOnDrag, updateBoard, solvePuzzle}
+export {validateSolution, invalidateCellOnDrag, updateBoard, solvePuzzle, undoEvent}
