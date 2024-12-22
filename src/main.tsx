@@ -10,6 +10,6 @@ const clone = rfdc();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Board board={sampleBoard}></Board>
-    <p>{solvePuzzle(clone(sampleBoard)).length}</p>
+    <p>possible solutions: {solvePuzzle(clone(sampleBoard)).length}</p>
   </StrictMode>,
 )

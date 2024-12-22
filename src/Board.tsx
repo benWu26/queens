@@ -60,6 +60,12 @@ function Board(props: boardPropType) {
                 }
             </div>
             <p>{validateSolution(board) ? "complete" : "incomplete"}</p>
+
+            {/* The Undo button */}
+            {/* <button onClick={onUndo} disabled={!canUndo}>   */}
+            <button>
+                UNDO
+            </button>
         </>
     )
 }

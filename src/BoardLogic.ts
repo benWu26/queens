@@ -12,6 +12,23 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
     "star": "valid"
 }
 
+
+//create an array of tuples of [row, column, valid/invalid]
+interface event {//each event is a row, column, and validity
+    xCoord: number;
+    yCoord: number;
+    validity: string;
+}
+type eventgroup = event[];  //for when a group of events happen in dragging(at least one event is needed)
+
+
+type eventstack = eventgroup[]; //creates a stack of event groups
+
+let eventStack: eventstack = []; //craete an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
+
+
+
+
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
  * return a Set of all cells in the board that are either in the same row, column, or color group
@@ -21,7 +38,7 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
  * @param {boardType} board
  * @returns {Set<cellType>}
  */
-const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => { //dots coming from queens
     const invalidCells = new Set<cellType>();
     board.forEach((row, ridx) => {
         row.forEach((cell, cidx) => {
@@ -114,6 +131,7 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
     }
 }
 
+
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
  * update the board based on the rules of the game. If the cell is currently valid, it will be
@@ -125,12 +143,28 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
  * @param {number} columnIndex
  * @param {boardType} board
  */
-const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => {
-    const newBoard: boardType = clone(board);
+const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => { //UPDATE BOARD GETS CALLED WHEN CLICKED ONA A CELL
+    const newBoard: boardType = clone(board); 
     const clickedCell = newBoard[rowIndex][columnIndex];
     const currentStatus = clickedCell.playerStatus;
     const nextStatus = playerStatusTransitions[currentStatus];
     clickedCell.playerStatus = nextStatus;
+
+    const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+        xCoord: rowIndex,
+        yCoord: columnIndex,
+        validity: currentStatus,
+    };
+
+    //initlizize a group(this case itll just be a single event tho)
+    let singleEvent:eventgroup = [];
+
+    //add to eventgroup as a single shit
+    singleEvent.push(currentEvent);
+
+    //add the new group to the overall array
+    eventStack.push(singleEvent);
+
 
     if (nextStatus === "invalid") { // transition from valid to invalid
         clickedCell.causes.push("human");
