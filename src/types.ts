@@ -28,4 +28,13 @@ type boardPropType = {
 // type for a board, which is a 2D array of cells
 type boardType = cellType[][];
 
-export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType };
+type nodeLabelType = {
+    cells: number[]
+}
+
+// type boardGraphType = {
+//     vertices: graphVertexType[],
+//     edges: Set<[number, number]>
+// }
+
+export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType };

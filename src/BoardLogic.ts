@@ -1,7 +1,9 @@
-import { cellType, boardType, playerStatusType } from "./types"
-import _ from "lodash";
+import { cellType, boardType, playerStatusType, nodeLabelType} from "./types"
+import _, { max, min } from "lodash";
 import rfdc from 'rfdc';
 const clone = rfdc();
+import { Graph, json } from "graphlib";
+import CustomGraph from "./CustomGraph";
 
 
 // ------------------------HELPER STUFF----------------------------
@@ -237,13 +239,13 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 
 // --------------------------- SOLUTION VALIDATION ------------------------------
 
-    /**
-     * Validates whether a given board is a solution to the puzzle.
-     * To be a solution, the board must have exactly one star in each row.
-     * Additionally, no two cells in the same row, column, or color group can both be stars.
-     * @param {boardType} board
-     * @returns {boolean} whether the given board is a solution
-     */
+/**
+ * Validates whether a given board is a solution to the puzzle.
+ * To be a solution, the board must have exactly one star in each row.
+ * Additionally, no two cells in the same row, column, or color group can both be stars.
+ * @param {boardType} board
+ * @returns {boolean} whether the given board is a solution
+ */
 const validateSolution = (board: boardType) => {
     let numStars = 0;
     for (let [rowIndex, row] of board.entries()) {
@@ -262,13 +264,12 @@ const validateSolution = (board: boardType) => {
     return (numStars === board.length) ? true : false;
 }
 
-
-    /**
-     * Recursive step of the solvePuzzle algorithm.
-     * @param {boardType} board the current state of the board
-     * @param {number} ridx the row index to try placing a star in
-     * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
-     */
+/**
+ * Recursive step of the solvePuzzle algorithm.
+ * @param {boardType} board the current state of the board
+ * @param {number} ridx the row index to try placing a star in
+ * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
+ */
 const solvePuzzleRecursiveStep = (board: boardType, ridx: number) : boardType[] => {
     if (ridx === board.length) {
         return [board];
@@ -290,14 +291,15 @@ const solvePuzzleRecursiveStep = (board: boardType, ridx: number) : boardType[] 
     return possibleSolutions;
 }
 
-    /**
-     * Solves a given puzzle by placing stars in valid cells and trying to find a solution.
-     * The algorithm works by trying to place a star in each valid cell in the first row, then
-     * recursively trying to place a star in each valid cell in the next row, and so on.
-     * If the algorithm can't find a solution, it returns false.
-     * @param {boardType} board the puzzle to solve
-     * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
-     */
+
+/**
+ * Solves a given puzzle by placing stars in valid cells and trying to find a solution.
+ * The algorithm works by trying to place a star in each valid cell in the first row, then
+ * recursively trying to place a star in each valid cell in the next row, and so on.
+ * If the algorithm can't find a solution, it returns false.
+ * @param {boardType} board the puzzle to solve
+ * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
+ */
 const solvePuzzle = (board: boardType) => {
     return solvePuzzleRecursiveStep(board, 0);
 }

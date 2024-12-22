@@ -6,11 +6,6 @@ import { updateBoard, invalidateCellOnDrag, validateSolution, solvePuzzle, undoE
 
 
 
-
-
-// // react component of the game board
-// console.log(solvePuzzle(sampleBoard))
-
 function Board(props: boardPropType) {
     // using board as a state variable
     const [board, setBoard] = useState(props.board);
