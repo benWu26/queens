@@ -1,6 +1,9 @@
 import { cellType, boardType, nodeLabelType} from "./types"
+import { solvePuzzle } from "./BoardLogic";
 import _ from "lodash";
 import { Graph, json } from "graphlib";
+import rfdc from "rfdc";
+const clone = rfdc();
 // PUZZLE GENERATION
 // create graph of n^2 vertices, each vertex corresponds to a cell
 // an edge between two vertices means that those two cells are connected by an edge
@@ -159,7 +162,7 @@ const constructBoardFromGraph = (graph: Graph): boardType => {
  * @param {number} size the size of the board to generate
  * @returns {boardType} the generated board
  */
-const generateBoard = (size: number): boardType => {
+const generateOneBoard = (size: number): boardType => {
     // Create a graph with the given number of nodes
     const defaultGraph = createGraph(size);
 
@@ -171,4 +174,17 @@ const generateBoard = (size: number): boardType => {
     return board;
 }
 
-export {generateBoard};
+const generateValidBoard = (size: number): boardType => {
+    while(true) {
+        const puzzleBoard = generateOneBoard(size);
+        if (solvePuzzle(clone(puzzleBoard)).length === 1){
+            return puzzleBoard;
+        }
+    }
+}
+
+export {generateValidBoard}
+
+
+// possible optimizations:
+// optimize the puzzle solver to be rule-based instead of backtracking, 
