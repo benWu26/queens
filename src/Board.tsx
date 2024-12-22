@@ -2,10 +2,8 @@ import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
-import { updateBoard, invalidateCellOnDrag, validateSolution, solvePuzzle } from "./BoardLogic";
+import { updateBoard, invalidateCellOnDrag, validateSolution } from "./BoardLogic";
 
-// // react component of the game board
-// console.log(solvePuzzle(sampleBoard))
 
 function Board(props: boardPropType) {
     // using board as a state variable
