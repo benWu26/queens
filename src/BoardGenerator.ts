@@ -57,35 +57,36 @@ const createGraph = (size: number): Graph => {
  * @param {string} stayNode the node to preserve
  * @param {string} elimNode the node to remove
  */
-function mergeNodes(graph: Graph, stayNode: string, elimNode: string): void {
+const mergeNodes = (graph: Graph, stayNode: string, elimNode: string): void =>  {
     if (!graph.hasNode(stayNode) || !graph.hasNode(elimNode)) {
       throw new Error('Both stayNode and elimNode must exist in the graph.');
     }
   
     // Remove the edge between stayNode and elimNode if it exists
-    if (graph.hasEdge(stayNode, elimNode)) {
-      graph.removeEdge(stayNode, elimNode);
+    if (graph.hasEdge(stayNode, elimNode)) { // O(1)
+      graph.removeEdge(stayNode, elimNode); // O(1)
     }
 
     // Add all of elimNode's cells to stayNode
-    graph.node(stayNode).cells.push(...graph.node(elimNode).cells);
+    graph.node(stayNode).cells.push(...graph.node(elimNode).cells); // O(1)
 
     // Get all neighbors of elimNode
-    const neighbors = graph.neighbors(elimNode) || [];
+    const neighbors = graph.neighbors(elimNode) || []; // O(|V|)
   
     // Rewire edges and remove connections to elimNode
-    for (const neighbor of neighbors) {
+    for (const neighbor of neighbors) { // roughly O(1) iterations
       if (neighbor !== stayNode) {
         // Create a new edge between stayNode and elimNode's neighbors
-        graph.setEdge(stayNode, neighbor);
+        graph.setEdge(stayNode, neighbor); // O(1)
       }
-      // Remove the edge between elimNode and its neighbor
-      graph.removeEdge(elimNode, neighbor);
     }
   
     // Remove elimNode from the graph
-    graph.removeNode(elimNode);
+    graph.removeNode(elimNode); // O(E) time
 }
+
+// graph is relatively sparse, so O(V) and O(E) can be treated as identical;
+// mergeNodes takes O(V) time, where V is at most n^2 and decreases over time.
 
 
 /**
@@ -102,15 +103,11 @@ const colorGraph = (graph: Graph, size: number): Graph => {
 
 
     // Reduce the size of the graph until it has the desired size
-    for (let i = 0; i < size**2 - size; i++) {
-        if (graph.edges().length > 0){
-            // select a random edge
-            const edge = _.sample(graph.edges());
-            if (edge) {
-                // merge the two nodes that this edge connects
-                mergeNodes(graph, edge.v, edge.w);
-            }
-            
+    for (let i = 0; i < size**2 - size; i++) { // O(n^2) iterations
+        const edge = _.sample(graph.edges()); // O(E)
+        if (edge) {
+            // merge the two nodes that this edge connects
+            mergeNodes(graph, edge.v, edge.w); // O(E)
         }
     }
 
