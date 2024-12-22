@@ -17,13 +17,13 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
 interface event {//each event is a row, column, and validity
     xCoord: number;
     yCoord: number;
-    validity: string;
+    validity: playerStatusType;
 }
 type eventgroup = event[];  //for when a group of events happen in dragging(at least one event is needed)
 
 type eventstack = eventgroup[]; //creates a stack of event groups
 
-let eventStack: eventstack = []; //craete an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
+let eventStack: eventstack = []; //creates an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
 
 
 
@@ -119,6 +119,7 @@ const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: b
  */
 const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boardType): boardType => {
     console.log("invalidateCellOnDrag called")
+
     if (board[rowIndex][columnIndex].playerStatus === "valid") {
         console.log("if branch taken");
         const newBoard = clone(board);
@@ -208,19 +209,23 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 
             const undoState = currentEventGroup[i].validity;
 
+            cell.playerStatus = undoState;
+
             //reads the undo state and turns it into what cell used to (along with the changes)
-            if(undoState === "Invalid"){ 
+            if(undoState === "invalid"){ 
                 cell.causes.push("human");
+                removeInvalidationCause(rowIndex, columnIndex, newBoard);
             }
             else if (undoState === "star") { 
                 cell.causes = [];
-
+                    
                 autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
             }
 
             else{
-                removeInvalidationCause(rowIndex, columnIndex, newBoard);
+                cell.causes = [];
             }
+
         }
 
         //at the end return the new board
