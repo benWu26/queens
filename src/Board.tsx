@@ -2,8 +2,8 @@ import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
-import { updateBoard, invalidateCellOnDrag, validateSolution, solvePuzzle, undoEvent } from "./BoardLogic";
-
+import { updateBoard, invalidateCellOnDrag, undoEvent } from "./BoardInteractionLogic";
+import {validateSolution} from "./BoardSolver"
 
 
 function Board(props: boardPropType) {

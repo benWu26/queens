@@ -1,5 +1,5 @@
 import { cellType, boardType, nodeLabelType} from "./types"
-import { solvePuzzle } from "./BoardLogic";
+import { solvePuzzle } from "./BoardSolver";
 import _, { sample } from "lodash";
 import { Graph, json, Edge } from "graphlib";
 import rfdc from "rfdc";
@@ -236,4 +236,5 @@ export {generateValidBoard, testGenerationSpeed, generateOneBoard}
 
 
 // possible optimizations:
-// optimize the puzzle solver to be rule-based instead of backtracking, 
+// create a rule-based solver
+// start by having the positions of the queens already decided, and only allowing edges to be selected if they connect a queen to a non-queen cell.
