@@ -94,15 +94,32 @@ const mergeNodes = (graph: Graph, stayNode: string, elimNode: string): void =>  
 
 // graph is relatively sparse, so O(V) and O(E) can be treated as identical;
 // mergeNodes takes O(V) time, where V is at most n^2 and decreases over time.
+
+
+/**
+ * Given a graph, a list of edges, and a probability function, returns a random edge from the list
+ * with probability proportional to the edge's weight times the result of the probability function.
+ *
+ * @param {Graph} graph the graph containing the edges
+ * @param {Edge[]} edgeList the list of edges to sample from
+ * @param {((w: any) => any)} probabilityFunction a function that takes an edge weight and returns a probability
+ * @returns {Edge | undefined} a random edge from the list, or undefined if the list is empty
+ */
 const sampleFromEdgeList = (graph: Graph, edgeList: Edge[], probabilityFunction: (w: any) => any) => {
-    const weights = edgeList.map((edge) => graph.edge(edge).weight)
+    // Get the weights of all the edges in the edgeList
+    const weights = edgeList.map((edge) => graph.edge(edge).weight);
+    // Calculate the probability of each edge being selected
     const probs = weights.map((weight) => probabilityFunction(weight));
+    // Calculate the total probability of all the edges
     const c = _.sum(probs);
 
+    // Generate a random number between 0 and the sum of all the probabilities
     const rand = Math.random() * c;
-    let cum = 0;
+    let cum = 0; // cumulative probability
     for (let i = 0; i < probs.length; i++) {
+        // Add the current edge's probability to the cumulative probability
         cum += probs[i];
+        // If the random number is less than the cumulative probability, return the current edge
         if (rand < cum) {
             return edgeList[i];
         }
