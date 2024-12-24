@@ -14,12 +14,14 @@ const sampleColorMap = [
 ]
 
 // takes the color map and returns a 2D array of cells
-const sampleBoard: boardType = sampleColorMap.map(row => row.map((c): cellType => {
+const sampleBoard: boardType = sampleColorMap.map((row, ridx) => row.map((c, cidx): cellType => {
     return {
         color: c,
         playerStatus: "valid",
         realStatus: "invalid",
-        causes: []
+        causes: [],
+        row: ridx,
+        column: cidx
     }
 }))
 

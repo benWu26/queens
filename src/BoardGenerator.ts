@@ -1,5 +1,5 @@
 import { cellType, boardType, nodeLabelType} from "./types"
-import { solvePuzzle } from "./BoardSolver";
+import { solvePuzzleRecursively } from "./BoardSolver";
 import _, { sample } from "lodash";
 import { Graph, json, Edge } from "graphlib";
 import rfdc from "rfdc";
@@ -127,7 +127,7 @@ const colorGraph = (graph: Graph, size: number): Graph => {
     for (let i = 0; i < size**2 - size; i++) { // O(n^2) iterations
         const probabilityFunction = (n: number) => (1/(n**2))
         const edge = sampleFromEdgeList(graph, graph.edges(), probabilityFunction);
-        //commented code: const edge = _.sample(graph.edges());
+        //const edge = _.sample(graph.edges());
         if (edge) {
             // merge the two nodes that this edge connects
             mergeNodes(graph, edge.v, edge.w); // O(E)
@@ -163,13 +163,15 @@ const constructBoardFromGraph = (graph: Graph): boardType => {
         })
     })
     // Create the board by mapping the color map to cells
-    const board: boardType = colorMap.map(row => row.map((c): cellType => {
+    const board: boardType = colorMap.map((row, ridx) => row.map((c, cidx): cellType => {
         // Each cell has a color, player status, real status, and causes
         return {
             color: c,
             playerStatus: "valid",
             realStatus: "invalid",
-            causes: []
+            causes: [],
+            row: ridx,
+            column: cidx
         }
     }))
 
@@ -194,27 +196,43 @@ const generateOneBoard = (size: number): boardType => {
     return board;
 }
 
+
+/**
+ * Generates a valid board of a given size by repeatedly generating boards until a valid one is found.
+ * A valid board is one that has a unique solution.
+ * @param {number} size the size of the board to generate
+ * @returns {boardType} the generated board
+ */
 const generateValidBoard = (size: number): boardType => {
+    // Keep track of the number of iterations it takes to find a valid board
     let num_iterations = 0;
+    // Keep track of the average time it takes to generate a board
     let avg_gen_time = 0;
+    // Keep track of the average time it takes to solve a board
     let avg_solve_time = 0;
 
-    while(true) {
+    // Keep generating boards until a valid one is found
+    while (true) {
         num_iterations += 1;
         const generateStartTime = performance.now();
+        // Generate a random board of the given size
         const puzzleBoard = generateOneBoard(size);
         const generateEndTime = performance.now();
+        // Add the time it took to generate this board to the total
         avg_gen_time += (generateEndTime - generateStartTime);
 
         const solveStartTime = performance.now();
-        const sols = solvePuzzle(clone(puzzleBoard));
+        // Solve the generated board
+        const sols = solvePuzzleRecursively(clone(puzzleBoard));
         const solveEndTime = performance.now();
+        // Add the time it took to solve this board to the total
         avg_solve_time += (solveEndTime - solveStartTime);
 
-        if (sols.length === 1){
+        // If the board has a unique solution, return it
+        if (sols.length === 1) {
             console.log(`number of puzzles generated: ${num_iterations}`);
-            console.log(`average puzzle gen time: ${avg_gen_time/num_iterations} ms`);
-            console.log(`average puzzle solve time: ${avg_solve_time/num_iterations} ms`);
+            console.log(`average puzzle gen time: ${avg_gen_time / num_iterations} ms`);
+            console.log(`average puzzle solve time: ${avg_solve_time / num_iterations} ms`);
 
             return puzzleBoard;
         }

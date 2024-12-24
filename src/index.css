@@ -4,6 +4,12 @@
   user-select: none;
 }
 
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .board {
   background-color: black;
 

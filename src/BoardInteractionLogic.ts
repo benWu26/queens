@@ -234,4 +234,19 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
     
 }
 
-export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause, }
+// RESET STATE
+
+const resetBoardState = (board: boardType) => {
+    const newBoard = clone(board);
+
+    for (let row of newBoard) {
+        for (let cell of row) {
+            cell.playerStatus = "valid";
+            cell.causes = [];
+        }
+    }
+
+    return newBoard;
+}
+
+export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause, resetBoardState}

@@ -1,3 +1,5 @@
+// ----------------------------------------- CELLS -------------------------------------------
+
 // status of each individual cell
 type playerStatusType = "valid" | "invalid" | "star"
 type realStatusType = "invalid" | "star"
@@ -10,6 +12,8 @@ type cellType = {
     playerStatus: playerStatusType,
     realStatus: realStatusType,
     causes: causesType,
+    row: number, 
+    column: number
 }
 
 // props that need to be passed in when creating a Cell component
@@ -21,21 +25,21 @@ type cellPropType = {
     updatePlayerStatusDrag: () => void
 }
 
+// ------------------------------BOARD------------------------------------
+// type for a board, which is a 2D array of cells
+type boardType = cellType[][];
+
 type boardPropType = {
     board: boardType
 }
 
-// type for a board, which is a 2D array of cells
-type boardType = cellType[][];
 
+
+// -------------------------------------- GRAPH STUFF ---------------------
 type nodeLabelType = {
     size: number,
     cells: number[]
 }
 
-// type boardGraphType = {
-//     vertices: graphVertexType[],
-//     edges: Set<[number, number]>
-// }
 
 export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType };

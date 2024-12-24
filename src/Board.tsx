@@ -2,7 +2,7 @@ import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
-import { updateBoard, invalidateCellOnDrag, undoEvent } from "./BoardInteractionLogic";
+import { updateBoard, invalidateCellOnDrag, undoEvent, resetBoardState } from "./BoardInteractionLogic";
 import {validateSolution} from "./BoardSolver"
 
 
@@ -13,7 +13,6 @@ function Board(props: boardPropType) {
     // ref variable for detecting if mouse is pressed or not
     const mouseDownRef = useRef(false);
 
-    
     const suppressMouseRef = useRef(false);
 
     // updates the board when a cell is clicked
@@ -26,8 +25,8 @@ function Board(props: boardPropType) {
         if (mouseDownRef.current && !suppressMouseRef.current) {
             setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
         }
-        
     }, []);
+
 
 
     //BEN FUNCTION FOR UNDO
@@ -35,10 +34,14 @@ function Board(props: boardPropType) {
         setBoard((b): boardType => undoEvent(b));
     }
 
+    const onResetButtonClick = useCallback(
+        () => {setBoard((b): boardType => resetBoardState(b));}, []
+    )
+
 
     return (
         // style board to be an nxn grid
-        <>
+        <div className="board-container">
             <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties} 
             onMouseDown={() => {
                 suppressMouseRef.current = true;
@@ -71,7 +74,11 @@ function Board(props: boardPropType) {
             <button onClick = {onButtonClick}> 
                 UNDO
             </button>
-        </>
+
+            <button onClick={onResetButtonClick}>
+                RESET
+            </button>
+        </div>
     )
 }
 
