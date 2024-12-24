@@ -41,5 +41,11 @@ type nodeLabelType = {
     cells: number[]
 }
 
+// -----------RULE BASED SOLVER------------------
+type cellGroupType = {
+    cells: Set<cellType>,
+    resolved: boolean
+}
 
-export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType };
+
+export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType, cellGroupType };

@@ -8,7 +8,7 @@ const clone = rfdc();
 import {generateValidBoard, testGenerationSpeed, generateOneBoard } from './BoardGenerator.ts'
 
 const puzzleBoard = generateValidBoard(8);
-//solvePuzzleRuleBased(puzzleBoard);
+solvePuzzleRuleBased(puzzleBoard);
 
 
 createRoot(document.getElementById('root')!).render(

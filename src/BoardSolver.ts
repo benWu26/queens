@@ -1,5 +1,5 @@
 import { getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic";
-import { boardType, playerStatusType, cellType } from "./types";
+import { boardType, playerStatusType, cellType, cellGroupType } from "./types";
 
 // --------------------------- SOLUTION VALIDATION ------------------------------
 
@@ -87,37 +87,38 @@ type cellChangeType = [number, number, playerStatusType];
 type ruleFunctionType = (board: boardType, groups: boardGroupsType) => cellChangeType[] | false;
 
 type boardGroupsType = {
-    rows: Set<cellType>[];
-    columns: Set<cellType>[];
-    colorGroups: Set<cellType>[];
+    rows: cellGroupType[];
+    columns: cellGroupType[];
+    colorGroups: cellGroupType[];
 };
+
+const createDefaultCellGroup = (): cellGroupType => {
+    return {
+        cells: new Set<cellType>(),
+        resolved: false
+    };
+}
 
 
 const splitBoardIntoGroups = (board: boardType): boardGroupsType => {
-    const rows: Set<cellType>[] = [];
-    const columns: Set<cellType>[] = [];
-    const colorGroups: Set<cellType>[] = [];
+    const rows: cellGroupType[] = []
+    const columns: cellGroupType[] = []
+    const colorGroups: cellGroupType[] = []
 
     for (let i = 0; i < board.length; i++) {
-        rows.push(new Set());
-        columns.push(new Set());
+        rows.push(createDefaultCellGroup());
+        columns.push(createDefaultCellGroup());
+        colorGroups.push(createDefaultCellGroup());
     }
     for (let row of board) {
         for (let cell of row) {
-            rows[cell.row].add(cell);
-            columns[cell.column].add(cell);
-            colorGroups[cell.color] = colorGroups[cell.color] || new Set();
-            colorGroups[cell.color].add(cell);
+            rows[cell.row].cells.add(cell);
+            columns[cell.column].cells.add(cell);
+            colorGroups[cell.color].cells.add(cell);
         }
     }
     return {rows, columns, colorGroups};
 }
-
-
-
-
-
-
 
 // rule 2: if the union of k sets K1 = ({s1 U s2 U s3 U sn}) valid cells are 
 // a subset of the union of another k sets K2 = ({S1 U S2 U S3...Sn}) valid cells,
@@ -139,27 +140,33 @@ const splitBoardIntoGroups = (board: boardType): boardGroupsType => {
 // rule 0: if a set is all invalid, the board is unsolvable, return false.
 const isBoardImpossible = (groups: boardGroupsType): boolean => {
     for (let group of [...groups.rows, ...groups.columns, ...groups.colorGroups]) {
-        if (group.size === 0) return true;
+        if (group.cells.size === 0 && group.resolved === false) return true;
     }
     return false;
 }
 
 const removeCellFromGroup = (cell: cellType, groups: boardGroupsType) => {
-    groups.rows[cell.row].delete(cell);
-    groups.columns[cell.column].delete(cell);
-    groups.colorGroups[cell.color].delete(cell);
+    groups.rows[cell.row].cells.delete(cell);
+    groups.columns[cell.column].cells.delete(cell);
+    groups.colorGroups[cell.color].cells.delete(cell);
 }
 
 // rule 1: if a set only has one valid cell, star it and auto invalidate
 // return the list of changes (star that cell, invalidate everything else)
 const applyStarPlacementRule = (board: boardType, groups: boardGroupsType) => {
+    console.log("star placement called");
+
     for (let group of [...groups.rows, ...groups.columns, ...groups.colorGroups]) {
-        if (group.size === 1) {
-            console.log("group size 1 found");
-            const cell = group.values().next().value;
+        if (group.cells.size === 1 && group.resolved === false) {
+            
+            const cell = group.cells.values().next().value!;
+            console.log(`placing star, group size 1 found at row ${cell.row}, column ${cell.column}`);
             if (cell) {
                 cell.playerStatus = "star";
                 removeCellFromGroup(cell, groups);
+                groups.rows[cell.row].resolved = true;
+                groups.columns[cell.column].resolved = true;
+                groups.colorGroups[cell.color].resolved = true;
 
                 const changes: cellChangeType[] = [];
                 const invalidCells = getInvalidCells(cell.row, cell.column, board);
@@ -177,34 +184,92 @@ const applyStarPlacementRule = (board: boardType, groups: boardGroupsType) => {
     return false;
 }
 
-const applyUnionEliminationRule = (board: boardType, groups: boardGroupsType) => {
-    // do across rows and columns first?
-    for (let group of [...groups.rows, ...groups.columns]) {
-        let uniColorGroup = true;
-        let color = group.values().next().value!.color;
-        for (let cell of group) {
-            if (color != cell.color) {
-                uniColorGroup = false;
-            }
+// n = 10, r = 2:
+// 0,1  1,2  2,3  3,4  4,5  5,6  6,7  7,8  8,9 
+// 012 123 234 456
+
+/**
+ * Generates all possible sets of r consecutive indices from 0 to n-1.
+ *
+ * For example, if n = 5 and r = 3, the output would be:
+ * [[0, 1, 2], [1, 2, 3], [2, 3, 4]]
+ *
+ * @param {number} n The upper limit of the range of indices (exclusive).
+ * @param {number} r The number of consecutive indices to include in each set.
+ * @returns {number[][]} An array of arrays, where each sub-array is a set of r
+ * consecutive indices from 0 to n-1.
+ */
+const generateIndexSets = (n: number, r: number) => {
+    const indexSets = []
+    // iterate over the range of indices, starting from 0 and going up to n - r + 1
+    for (let i = 0; i < n - r + 1; i++) {
+        const indexSet = []; // initialize an empty array to store the current set of indices
+        // iterate over the current set of indices, starting from i and going up to i + r
+        for (let j = i; j < i + r; j++) {
+            // push the current index to the set of indices
+            indexSet.push(j);
         }
-        if (uniColorGroup) {
-            // eliminate everything in color's group not in the group
-            const colorGroup = groups.colorGroups[color];
-            const changes: cellChangeType[] = [];
-            for (let cell of colorGroup) {
-                if (!group.has(cell)) {
-                    cell.playerStatus = "invalid";
-                    changes.push([cell.row, cell.column, "invalid"])
-                    removeCellFromGroup(cell, groups);
+        // push the current set of indices to the array of all sets of indices
+        indexSets.push(indexSet);
+    }
+    return indexSets;
+}
+
+const applyIcicleRule = (board: boardType, groups: boardGroupsType) => {
+    // do across rows and columns first?
+    // for getting multiple rows:
+    // select two contiguous rows/columns
+    // check if there are 2 colors contained within
+    // scale up to n
+    for (let i = 1; i < 4; i++) {
+        const indexSets = generateIndexSets(board.length, i);
+        
+        // for each set in indexSets:
+        // select those indices of rows/columns
+        // destructure into one "group"
+        const mergedRowGroups: Set<cellType>[] = [];
+        const mergedColumnGroups: Set<cellType>[] = [];
+        indexSets.forEach(indexSet => {
+            const mergedRowGroup: Set<cellType> = new Set();
+            const mergedColumnGroup: Set<cellType> = new Set();
+            indexSet.forEach(idx => {
+                for (let cell of groups.rows[idx].cells) mergedRowGroup.add(cell);
+                for (let cell of groups.columns[idx].cells) mergedColumnGroup.add(cell);
+            })
+            mergedRowGroups.push(mergedRowGroup);
+            mergedColumnGroups.push(mergedColumnGroup);
+        })
+
+        for (let group of [...mergedRowGroups, ...mergedColumnGroups]) {
+            const colors = new Set<number>();
+            for (let cell of group) colors.add(cell.color);
+            if (colors.size == i) {
+                console.log("color elimination happening")
+                const mergedColorGroup = new Set(
+                    Array.from(colors).flatMap(color => Array.from(groups.colorGroups[color].cells || []))
+                );
+
+                if (mergedColorGroup.size > group.size) {
+                    const changes: cellChangeType[] = [];
+
+                    for (let cell of mergedColorGroup) {
+                        if (!group.has(cell)) {
+                            cell.playerStatus = "invalid";
+                            changes.push([cell.row, cell.column, "invalid"]);
+                            removeCellFromGroup(cell, groups);
+                        }
+                    }
+                    console.log(changes);
+                    return changes;
                 }
             }
-            return changes;
-        }
+        }        
     }
+
     return false;
 }
 
-const rules = [applyStarPlacementRule, applyUnionEliminationRule];
+const rules = [applyStarPlacementRule, applyIcicleRule];
 
 
 
@@ -216,9 +281,10 @@ const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType) => {
         return true;
     }
     for (let rule of rules) {
+        console.log("iterating through rule array")
         const result = rule(board, groups);
         if (result) {
-            console.log("rule called");
+            console.log("a rule was invoked");
             return result;
         }
     }
@@ -232,9 +298,15 @@ const solvePuzzleRuleBased = (board: boardType) => {
     // each group should ONLY contain valid cells, will make things easier
     const groups = splitBoardIntoGroups(board);
 
-    while (true) {
+    let iterations = 0;
+    while (iterations < 100) {
+        console.log("iterating");
         const result = solvePuzzleOneIteration(board, groups);
-        if (!result || result === true) break;
+        if (!result || result === true) {
+            console.log("breaking");
+            break;
+        }
+        iterations++;
     }
 }
 
