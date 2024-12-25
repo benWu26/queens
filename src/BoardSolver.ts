@@ -154,7 +154,6 @@ const removeCellFromGroup = (cell: cellType, groups: boardGroupsType) => {
 // rule 1: if a set only has one valid cell, star it and auto invalidate
 // return the list of changes (star that cell, invalidate everything else)
 const applyStarPlacementRule = (board: boardType, groups: boardGroupsType) => {
-    console.log("star placement called");
 
     for (let group of [...groups.rows, ...groups.columns, ...groups.colorGroups]) {
         if (group.cells.size === 1 && group.resolved === false) {
@@ -254,7 +253,6 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
     // select two contiguous rows/columns
     // check if there are 2 colors contained within
     // scale up to n
-    console.log("testing icicle");
 
     for (let i = 1; i < 4; i++) {
         const [mergedRowGroups, mergedColumnGroups] = getMergedRCGroups(groups, board.length, i);
@@ -287,7 +285,6 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
 }
 
 const applyReverseIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
-    console.log("testing reverse icicle")
 
     for (let i = 1; i < 4; i++) {
         const [mergedRowGroups, mergedColumnGroups] = getMergedRCGroups(groups, board.length, i);
@@ -330,12 +327,48 @@ const applyReverseIcicleRule = (board: boardType, groups: boardGroupsType): cell
     return false;
 }
 
+const applyIntersectionRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
+    let sortedColorGroups = Array.from(groups.colorGroups).sort(
+        (a, b) => a.cells.size - b.cells.size
+    );
+    sortedColorGroups = sortedColorGroups.filter(group => group.cells.size > 0);
+    
+
+    for (let colorGroup of sortedColorGroups) {
+        const invalidationSets: Set<cellType>[] = []; 
+        colorGroup.cells.forEach(cell => {
+            const invalidationSet = new Set<cellType>(getInvalidCells(cell.row, cell.column, board));
+            invalidationSets.push(invalidationSet);
+        });
+        const intersection = invalidationSets.reduce(
+            (prev, current) => new Set([...prev].filter(x => current.has(x)))
+        );
+        if (intersection.size > 0) {
+            const changes: cellChangeType[] = [];
+            for (let cell of intersection) {
+                if (cell.playerStatus !== "invalid") {
+                    cell.playerStatus = "invalid";
+                    changes.push([cell.row, cell.column, "invalid"]);
+                    removeCellFromGroup(cell, groups);
+                }
+            }
+            if (changes.length) {
+                console.log("intersection rule");
+                console.log(changes);
+                return changes;
+            }
+        }
+    }
+
+    return false;
+}
+
 // how does reverse icicle rule work?
 // look through a (preferably contiguous) group of rows/columns
 // tbh, the merge group should be its own separate function
 
 
-const rules = [applyStarPlacementRule, applyIcicleRule, applyReverseIcicleRule];
+const rules = [applyStarPlacementRule, applyIcicleRule, applyReverseIcicleRule, applyIntersectionRule];
 
 
 
@@ -349,7 +382,6 @@ const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType) => {
     for (let rule of rules) {
         const result = rule(board, groups);
         if (result) {
-            console.log("a rule was invoked");
             return result;
         }
     }
@@ -363,15 +395,20 @@ const solvePuzzleRuleBased = (board: boardType) => {
     // each group should ONLY contain valid cells, will make things easier
     const groups = splitBoardIntoGroups(board);
 
+    const solveStartTime = performance.now();
+
     let iterations = 0;
     while (iterations < 100) {
         const result = solvePuzzleOneIteration(board, groups);
         if (!result || result === true) {
-            console.log("breaking");
             break;
         }
         iterations++;
     }
+
+    const solveEndTime = performance.now();
+
+    console.log(`rule based solver: ${solveEndTime - solveStartTime} ms`)
 }
 
 
