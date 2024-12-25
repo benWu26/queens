@@ -199,7 +199,7 @@ const applyStarPlacementRule = (board: boardType, groups: boardGroupsType) => {
  * @returns {number[][]} An array of arrays, where each sub-array is a set of r
  * consecutive indices from 0 to n-1.
  */
-const generateIndexSets = (n: number, r: number) => {
+const generateConsecutiveIndexSets = (n: number, r: number) => {
     const indexSets = []
     // iterate over the range of indices, starting from 0 and going up to n - r + 1
     for (let i = 0; i < n - r + 1; i++) {
@@ -215,41 +215,59 @@ const generateIndexSets = (n: number, r: number) => {
     return indexSets;
 }
 
-const applyIcicleRule = (board: boardType, groups: boardGroupsType) => {
+const getMergedRCGroups = (groups: boardGroupsType, total_size: number, merge_size: number) => {
+    const indexSets = generateConsecutiveIndexSets(total_size, merge_size);
+    
+    // for each set in indexSets:
+    // select those indices of rows/columns
+    // destructure into one "group"
+    const mergedRowGroups: Set<cellType>[] = [];
+    const mergedColumnGroups: Set<cellType>[] = [];
+    indexSets.forEach(indexSet => {
+        const mergedRowGroup: Set<cellType> = new Set();
+        const mergedColumnGroup: Set<cellType> = new Set();
+        let shouldCancelMerging = false;
+        indexSet.forEach(idx => {
+            if (groups.rows[idx].resolved || groups.columns[idx].resolved) {
+                shouldCancelMerging = true;
+                return;
+            }
+            for (let cell of groups.rows[idx].cells) mergedRowGroup.add(cell);
+            for (let cell of groups.columns[idx].cells) mergedColumnGroup.add(cell);
+        });
+        if (shouldCancelMerging) return;
+        mergedRowGroups.push(mergedRowGroup);
+        mergedColumnGroups.push(mergedColumnGroup);
+    });
+    return [mergedRowGroups, mergedColumnGroups];
+}
+
+/**
+ * Applies the icicle rule to the given board and groups.
+ * @param {boardType} board The board to apply the rule to.
+ * @param {boardGroupsType} groups The groups of cells on the board.
+ * @returns {cellChangeType[]|false} An array of cell changes if the rule was applied, false otherwise.
+ */
+const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
     // do across rows and columns first?
     // for getting multiple rows:
     // select two contiguous rows/columns
     // check if there are 2 colors contained within
     // scale up to n
+    console.log("testing icicle");
+
     for (let i = 1; i < 4; i++) {
-        const indexSets = generateIndexSets(board.length, i);
-        
-        // for each set in indexSets:
-        // select those indices of rows/columns
-        // destructure into one "group"
-        const mergedRowGroups: Set<cellType>[] = [];
-        const mergedColumnGroups: Set<cellType>[] = [];
-        indexSets.forEach(indexSet => {
-            const mergedRowGroup: Set<cellType> = new Set();
-            const mergedColumnGroup: Set<cellType> = new Set();
-            indexSet.forEach(idx => {
-                for (let cell of groups.rows[idx].cells) mergedRowGroup.add(cell);
-                for (let cell of groups.columns[idx].cells) mergedColumnGroup.add(cell);
-            })
-            mergedRowGroups.push(mergedRowGroup);
-            mergedColumnGroups.push(mergedColumnGroup);
-        })
+        const [mergedRowGroups, mergedColumnGroups] = getMergedRCGroups(groups, board.length, i);
 
         for (let group of [...mergedRowGroups, ...mergedColumnGroups]) {
             const colors = new Set<number>();
             for (let cell of group) colors.add(cell.color);
             if (colors.size == i) {
-                console.log("color elimination happening")
                 const mergedColorGroup = new Set(
                     Array.from(colors).flatMap(color => Array.from(groups.colorGroups[color].cells || []))
                 );
-
                 if (mergedColorGroup.size > group.size) {
+                    console.log(`color elimination happening with i = ${i}`);
                     const changes: cellChangeType[] = [];
 
                     for (let cell of mergedColorGroup) {
@@ -265,11 +283,59 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType) => {
             }
         }        
     }
-
     return false;
 }
 
-const rules = [applyStarPlacementRule, applyIcicleRule];
+const applyReverseIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
+    console.log("testing reverse icicle")
+
+    for (let i = 1; i < 4; i++) {
+        const [mergedRowGroups, mergedColumnGroups] = getMergedRCGroups(groups, board.length, i);
+
+        for (let group of [...mergedRowGroups, ...mergedColumnGroups]) {
+            // get all the colors present
+            // for each color, see if that entire color group is present inside of the merged group
+            // if this holds for i colors, then we must eliminate everything inside the merged group not 
+            // in the i colors.
+            const colors = new Set<number>();
+            for (let cell of group) colors.add(cell.color);
+            const lockedColors = new Set<number>();
+            colors.forEach(color => {
+                let isColorLocked = true;
+                // is the entire color group present inside the merged group?
+                groups.colorGroups[color].cells.forEach(cell => {
+                    if (!group.has(cell)) {
+                        isColorLocked = false;
+                    }
+                });
+                if (isColorLocked) {
+                    lockedColors.add(color);
+                }
+            });
+            if (lockedColors.size === i && colors.size > i) {
+                console.log("reverse icicle called")
+                const changes: cellChangeType[] = [];
+                group.forEach(cell => {
+                    if (!lockedColors.has(cell.color)) {
+                        cell.playerStatus = "invalid";
+                        changes.push([cell.row, cell.column, "invalid"]);
+                        removeCellFromGroup(cell, groups);
+                    }
+                })
+                console.log(changes);
+                return changes;
+            }
+        }
+    }
+    return false;
+}
+
+// how does reverse icicle rule work?
+// look through a (preferably contiguous) group of rows/columns
+// tbh, the merge group should be its own separate function
+
+
+const rules = [applyStarPlacementRule, applyIcicleRule, applyReverseIcicleRule];
 
 
 
@@ -281,7 +347,6 @@ const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType) => {
         return true;
     }
     for (let rule of rules) {
-        console.log("iterating through rule array")
         const result = rule(board, groups);
         if (result) {
             console.log("a rule was invoked");
@@ -300,7 +365,6 @@ const solvePuzzleRuleBased = (board: boardType) => {
 
     let iterations = 0;
     while (iterations < 100) {
-        console.log("iterating");
         const result = solvePuzzleOneIteration(board, groups);
         if (!result || result === true) {
             console.log("breaking");
