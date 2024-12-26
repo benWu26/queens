@@ -2,11 +2,12 @@ import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
-import { updateBoard, invalidateCellOnDrag, undoEvent } from "./BoardInteractionLogic";
+import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, pushEventGroup, addGroupToStack, event} from "./BoardInteractionLogic";
 import {validateSolution} from "./BoardSolver"
 
 
 function Board(props: boardPropType) {
+    
     // using board as a state variable
     const [board, setBoard] = useState(props.board);
 
@@ -25,6 +26,17 @@ function Board(props: boardPropType) {
     const onDrag = useCallback((rowIndex: number, columnIndex: number): void => {
         if (mouseDownRef.current && !suppressMouseRef.current) {
             setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
+
+            // //create event 
+            // const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+            //     xCoord: rowIndex,
+            //     yCoord: columnIndex,
+            //     validity: "invalid",
+            // };
+
+            // //adds to group
+            // pushEventGroup(currentEvent);
+            // console.log("added " + currentEvent);
         }
         
     }, []);
@@ -34,7 +46,7 @@ function Board(props: boardPropType) {
     const onButtonClick = (): void => {
         setBoard((b): boardType => undoEvent(b));
     }
-
+    
 
     return (
         // style board to be an nxn grid
@@ -46,8 +58,21 @@ function Board(props: boardPropType) {
                 setTimeout(() => {
                     suppressMouseRef.current = false;
                 }, 50);
+
+                //create a new event group/empties
+                emptyEventGroup();
+                                              
+
             }} 
-            onMouseUp={() => {mouseDownRef.current = false}}>
+
+
+
+            onMouseUp={() => {
+                mouseDownRef.current = false;
+                addGroupToStack(); //adds to the stack
+
+
+                }}>
                 {
                     // 2 layers of mapping
                     board.map((row, rowIndex) => row.map((cell, columnIndex) => {

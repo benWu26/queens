@@ -14,7 +14,7 @@ const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
 
 
 //create an array of tuples of [row, column, valid/invalid]
-interface event {//each event is a row, column, and validity
+export interface event {//each event is a row, column, and validity
     xCoord: number;
     yCoord: number;
     validity: playerStatusType;
@@ -23,6 +23,7 @@ type eventgroup = event[];  //for when a group of events happen in dragging(at l
 
 type eventstack = eventgroup[]; //creates a stack of event groups
 
+let eventGroup: eventgroup = [];
 let eventStack: eventstack = []; //creates an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
 
 
@@ -118,13 +119,26 @@ const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: b
  * @returns {boardType}
  */
 const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boardType): boardType => {
-    console.log("invalidateCellOnDrag called")
+    //console.log("invalidateCellOnDrag called")
 
     if (board[rowIndex][columnIndex].playerStatus === "valid") {
-        console.log("if branch taken");
+        //console.log("if branch taken");
         const newBoard = clone(board);
         newBoard[rowIndex][columnIndex].playerStatus = "invalid"
         newBoard[rowIndex][columnIndex].causes.push("human");
+
+
+        //create event 
+        const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+            xCoord: rowIndex,
+            yCoord: columnIndex,
+            validity: "valid",
+        };
+
+        //adds to group
+        pushEventGroup(currentEvent);
+        
+
         return newBoard;
     } else {
         return board;
@@ -197,8 +211,6 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
         //read latest event group
         let currentEventGroup:eventgroup = eventStack[eventStack.length - 1];
 
-        //pop off the array
-        eventStack.pop();
 
         for (let i = 0; i < currentEventGroup.length; i++) { //for each element in the event group
             const rowIndex = currentEventGroup[i].xCoord;
@@ -218,8 +230,10 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
             }
             else if (undoState === "star") { 
                 cell.causes = [];
-                    
+            
                 autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
+
+                
             }
 
             else{
@@ -228,10 +242,31 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 
         }
 
+        //pop off the array
+        eventStack.pop();
+
         //at the end return the new board
         return newBoard;
     }
     
 }
 
-export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause, }
+//EVENT GROUP HELPER FUNCTIONS
+
+//create a event group 
+const emptyEventGroup = () => {
+    eventGroup = []; //empties group 
+}
+
+const pushEventGroup = (currentEvent: event) => {
+    eventGroup.push(currentEvent);
+    console.log("added " + currentEvent);
+}
+
+
+const addGroupToStack = () => { //when mouseup, stop adding to group and push into main stack
+    eventStack.push(eventGroup);
+}
+
+
+export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause, emptyEventGroup, pushEventGroup, addGroupToStack, }
