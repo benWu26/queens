@@ -164,21 +164,22 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     const nextStatus = playerStatusTransitions[currentStatus];
     clickedCell.playerStatus = nextStatus;
 
-    const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
-        xCoord: rowIndex,
-        yCoord: columnIndex,
-        validity: currentStatus,
-    };
+    // if(nextStatus != "invalid"){ //fixes the double stack issue when clicking on a single cell
+        const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+            xCoord: rowIndex,
+            yCoord: columnIndex,
+            validity: currentStatus,
+        };
 
-    //initlizize a group(this case itll just be a single event tho)
-    let singleEvent:eventgroup = [];
+        //initlizize a group(this case itll just be a single event tho)
+        let singleEvent:eventgroup = [];
 
-    //add to eventgroup as a single shit
-    singleEvent.push(currentEvent);
+        //add to eventgroup as a single shit
+        singleEvent.push(currentEvent);
 
-    //add the new group to the overall array
-    eventStack.push(singleEvent);
-
+        //add the new group to the overall array
+        eventStack.push(singleEvent);
+    //}
 
 
     if (nextStatus === "invalid") { // transition from valid to invalid
@@ -232,8 +233,6 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
                 cell.causes = [];
             
                 autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
-
-                
             }
 
             else{
@@ -260,7 +259,6 @@ const emptyEventGroup = () => {
 
 const pushEventGroup = (currentEvent: event) => {
     eventGroup.push(currentEvent);
-    console.log("added " + currentEvent);
 }
 
 

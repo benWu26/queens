@@ -27,16 +27,6 @@ function Board(props: boardPropType) {
         if (mouseDownRef.current && !suppressMouseRef.current) {
             setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
 
-            // //create event 
-            // const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
-            //     xCoord: rowIndex,
-            //     yCoord: columnIndex,
-            //     validity: "invalid",
-            // };
-
-            // //adds to group
-            // pushEventGroup(currentEvent);
-            // console.log("added " + currentEvent);
         }
         
     }, []);
