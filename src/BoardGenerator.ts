@@ -1,5 +1,5 @@
 import { cellType, boardType, nodeLabelType} from "./types"
-import { solvePuzzleRecursively } from "./BoardSolver";
+import { solvePuzzleRecursively, solvePuzzleRuleBased } from "./BoardSolver";
 import _, { sample } from "lodash";
 import { Graph, json, Edge } from "graphlib";
 import rfdc from "rfdc";
@@ -223,13 +223,13 @@ const generateValidBoard = (size: number): boardType => {
 
         const solveStartTime = performance.now();
         // Solve the generated board
-        const sols = solvePuzzleRecursively(clone(puzzleBoard));
+        const sols = solvePuzzleRuleBased(clone(puzzleBoard));
         const solveEndTime = performance.now();
         // Add the time it took to solve this board to the total
         avg_solve_time += (solveEndTime - solveStartTime);
 
         // If the board has a unique solution, return it
-        if (sols.length === 1) {
+        if (sols) {
             console.log(`number of puzzles generated: ${num_iterations}`);
             console.log(`average puzzle gen time: ${avg_gen_time / num_iterations} ms`);
             console.log(`average puzzle solve time: ${avg_solve_time / num_iterations} ms`);

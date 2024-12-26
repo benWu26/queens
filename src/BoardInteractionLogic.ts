@@ -249,4 +249,4 @@ const resetBoardState = (board: boardType) => {
     return newBoard;
 }
 
-export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause, resetBoardState}
+export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, resetBoardState}
