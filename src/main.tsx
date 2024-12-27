@@ -9,7 +9,7 @@ const clone = rfdc();
 import {generateValidBoard, testGenerationSpeed, generateOneBoard } from './BoardGenerator.ts'
 
 //const puzzleBoard = sampleBoard;
-const puzzleBoard = generateValidBoard(10);
+const puzzleBoard = generateValidBoard(8);
 
 
 createRoot(document.getElementById('root')!).render(

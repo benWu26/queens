@@ -174,7 +174,7 @@ const applyStarPlacementRule = (board: boardType, groups: boardGroupsType) => {
         if (group.cells.size === 1 && group.resolved === false) {
             
             const cell = group.cells.values().next().value!;
-            console.log(`placing star, group size 1 found at row ${cell.row}, column ${cell.column}`);
+            //console.log(`placing star, group size 1 found at row ${cell.row}, column ${cell.column}`);
             if (cell) {
                 return markStarCell(cell, groups, board);
             }
@@ -293,7 +293,7 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
                 );
                 if (mergedColorGroup.size > group.size) {
                     const changes: cellChangeType[] = [];
-                    console.log(`icicle rule invoked, i=${i}`)
+                    //console.log(`icicle rule invoked, i=${i}`)
                     for (let cell of mergedColorGroup) {
                         if (!group.has(cell)) {
                             cell.playerStatus = "invalid";
@@ -301,7 +301,7 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
                             removeCellFromGroup(cell, groups);
                         }
                     }
-                    console.log(changes);
+                    //console.log(changes);
                     return changes;
                 }
             }
@@ -321,14 +321,14 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
                 }
             });
             if (lockedColors.size === i && colors.size > i) {
-                console.log(`reverse icicle rule invoked, i=${i}`);
+                //console.log(`reverse icicle rule invoked, i=${i}`);
                 const changes: cellChangeType[] = [];
                 group.forEach(cell => {
                     if (!lockedColors.has(cell.color)) {
                         markInvalidCell(cell, changes, groups);
                     }
                 })
-                console.log(changes);
+                //console.log(changes);
                 return changes;
             }
         }        
@@ -355,8 +355,8 @@ const markIntersectionOfInvalidatedSets = (cellGroup: cellGroupType, groups: boa
             markInvalidCell(cell, changes, groups);
         }
         if (changes.length) {
-            console.log("intersection rule");
-            console.log(changes);
+            //console.log("intersection rule");
+            //console.log(changes);
             return changes;
         }
     }
@@ -393,7 +393,7 @@ const rulesWithoutBranching = [applyStarPlacementRule, applyIcicleRule, applyInt
 // look through a (preferably contiguous) group of rows/columns
 // tbh, the merge group should be its own separate function
 const applyBranchRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
-    console.log(groups);
+    //console.log(groups);
     const allGroups = [...groups.rows, ...groups.columns, ...groups.colorGroups];
     const filteredGroups = allGroups
         .filter(group => group.cells.size > 0 && group.cells.size < 4)
@@ -419,9 +419,9 @@ const applyBranchRule = (board: boardType, groups: boardGroupsType): cellChangeT
     smallestGroup.cells.forEach(cell => {
         const branchBoard = clone(board);
         const branchGroups = splitBoardIntoGroups(branchBoard);
-        console.log(branchBoard);
+        //console.log(branchBoard);
         markStarCell(branchBoard[cell.row][cell.column], branchGroups, branchBoard);
-        console.log(branchBoard);
+        //console.log(branchBoard);
 
         branchedBoards.push(branchBoard);
         branchedGroupsList.push(branchGroups);
@@ -452,7 +452,7 @@ const applyBranchRule = (board: boardType, groups: boardGroupsType): cellChangeT
         })
 
         if (intersection.length) {
-            console.log("intersection found");
+            //console.log("intersection found");
             intersection.forEach(change => {
                 markInvalidCell(board[change[0]][change[1]], changes, groups);
             })
@@ -497,15 +497,12 @@ const solvePuzzleRuleBased = (board: boardType) => {
         const result = solvePuzzleOneIteration(board, groups, rulesWithBranching);
         if (!result || result === true) {
             const solveEndTime = performance.now();
-            console.log(`rule based solver: ${solveEndTime - solveStartTime} ms`)
             return result;
         }
         iterations++;
     }
 
     const solveEndTime = performance.now();
-
-    console.log(`rule based solver: ${solveEndTime - solveStartTime} ms`)
 }
 
 export {validateSolution, solvePuzzleRecursively, solvePuzzleRuleBased}
