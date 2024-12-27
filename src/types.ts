@@ -33,8 +33,6 @@ type boardPropType = {
     board: boardType
 }
 
-
-
 // -------------------------------------- GRAPH STUFF ---------------------
 type nodeLabelType = {
     size: number,

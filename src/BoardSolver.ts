@@ -1,6 +1,8 @@
-import { getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic";
+import { getInvalidCells, autoInvalidateOneCell, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic";
 import { boardType, playerStatusType, cellType, cellGroupType } from "./types";
-
+import rfdc from "rfdc";
+const clone = rfdc();
+import _ from "lodash";
 // --------------------------- SOLUTION VALIDATION ------------------------------
 
 /**
@@ -99,7 +101,6 @@ const createDefaultCellGroup = (): cellGroupType => {
     };
 }
 
-
 const splitBoardIntoGroups = (board: boardType): boardGroupsType => {
     const rows: cellGroupType[] = []
     const columns: cellGroupType[] = []
@@ -112,32 +113,20 @@ const splitBoardIntoGroups = (board: boardType): boardGroupsType => {
     }
     for (let row of board) {
         for (let cell of row) {
-            rows[cell.row].cells.add(cell);
-            columns[cell.column].cells.add(cell);
-            colorGroups[cell.color].cells.add(cell);
+            if (cell.playerStatus === "valid"){
+                rows[cell.row].cells.add(cell);
+                columns[cell.column].cells.add(cell);
+                colorGroups[cell.color].cells.add(cell);
+            } else if (cell.playerStatus === "star") {
+                rows[cell.row].resolved = true;
+                columns[cell.column].resolved = true;
+                colorGroups[cell.color].resolved = true;
+            }
         }
     }
     return {rows, columns, colorGroups};
 }
 
-// rule 2: if the union of k sets K1 = ({s1 U s2 U s3 U sn}) valid cells are 
-// a subset of the union of another k sets K2 = ({S1 U S2 U S3...Sn}) valid cells,
-// then any cells in K2 not in K1 must be eliminated.
-// s1, s2, s3 all share a type (row, column, or color) as do S1, S2, and S3
-// return the list of changes (would be cells that were invalidated)
-
-// rule 3: if a cell invalidates all cells in a group, then that cell has to be invalid.
-// because elimination is a reflexive relation (a elim b <-> b elim a), we can rephrase it as:
-// if all cells in a group invalidate a certain cell, that cell must be eliminated.
-// return the list of changes (would be cells that were invalidated)
-
-// rule 4, guessing rule:
-// if rule 1 and 2 fail, find the group with the least amount of valid cells (k).
-// create k different copies of the board, where each copy tests out a different star placement.
-// run the rule-based solver on each one and keep track of changes somehow.
-// if any changes occur on all branches, then that change has to occur. apply it to the main board, return true;
-
-// rule 0: if a set is all invalid, the board is unsolvable, return false.
 const isBoardImpossible = (groups: boardGroupsType): boolean => {
     for (let group of [...groups.rows, ...groups.columns, ...groups.colorGroups]) {
         if (group.cells.size === 0 && group.resolved === false) return true;
@@ -151,32 +140,43 @@ const removeCellFromGroup = (cell: cellType, groups: boardGroupsType) => {
     groups.colorGroups[cell.color].cells.delete(cell);
 }
 
+const markInvalidCell = (cell: cellType, changes: cellChangeType[], groups: boardGroupsType) => {
+    if (cell.playerStatus !== "invalid") {
+        changes.push([cell.row, cell.column, "invalid"]);
+        cell.playerStatus = "invalid";
+        removeCellFromGroup(cell, groups);
+    }
+}
+
+const markStarCell = (cell: cellType, groups: boardGroupsType, board: boardType) => {
+    const changes: cellChangeType[] = [];
+    changes.push([cell.row, cell.column, 'star']);
+    cell.playerStatus = "star";
+    removeCellFromGroup(cell, groups);
+    groups.rows[cell.row].resolved = true;
+    groups.columns[cell.column].resolved = true;
+    groups.colorGroups[cell.color].resolved = true;
+
+    const invalidCells = getInvalidCells(cell.row, cell.column, board);
+
+    invalidCells.forEach(invalidCell => {
+        markInvalidCell(invalidCell, changes, groups);
+    })
+    return changes;
+
+}
+
 // rule 1: if a set only has one valid cell, star it and auto invalidate
 // return the list of changes (star that cell, invalidate everything else)
 const applyStarPlacementRule = (board: boardType, groups: boardGroupsType) => {
-    console.log("star placement called");
 
     for (let group of [...groups.rows, ...groups.columns, ...groups.colorGroups]) {
         if (group.cells.size === 1 && group.resolved === false) {
             
             const cell = group.cells.values().next().value!;
-            console.log(`placing star, group size 1 found at row ${cell.row}, column ${cell.column}`);
+            //console.log(`placing star, group size 1 found at row ${cell.row}, column ${cell.column}`);
             if (cell) {
-                cell.playerStatus = "star";
-                removeCellFromGroup(cell, groups);
-                groups.rows[cell.row].resolved = true;
-                groups.columns[cell.column].resolved = true;
-                groups.colorGroups[cell.color].resolved = true;
-
-                const changes: cellChangeType[] = [];
-                const invalidCells = getInvalidCells(cell.row, cell.column, board);
-
-                invalidCells.forEach(invalidCell => {
-                    changes.push([invalidCell.row, invalidCell.column, "invalid"]);
-                    invalidCell.playerStatus = "invalid";
-                    removeCellFromGroup(invalidCell, groups);
-                })
-                return changes;
+                return markStarCell(cell, groups, board);
             }
         }
     }
@@ -224,20 +224,44 @@ const getMergedRCGroups = (groups: boardGroupsType, total_size: number, merge_si
     const mergedRowGroups: Set<cellType>[] = [];
     const mergedColumnGroups: Set<cellType>[] = [];
     indexSets.forEach(indexSet => {
-        const mergedRowGroup: Set<cellType> = new Set();
-        const mergedColumnGroup: Set<cellType> = new Set();
-        let shouldCancelMerging = false;
+        let shouldMergeRows = true;
+        let shouldMergeColumns = true;
         indexSet.forEach(idx => {
-            if (groups.rows[idx].resolved || groups.columns[idx].resolved) {
-                shouldCancelMerging = true;
+            if (groups.rows[idx].resolved === true) {
+                shouldMergeRows = false;
                 return;
             }
-            for (let cell of groups.rows[idx].cells) mergedRowGroup.add(cell);
-            for (let cell of groups.columns[idx].cells) mergedColumnGroup.add(cell);
         });
-        if (shouldCancelMerging) return;
-        mergedRowGroups.push(mergedRowGroup);
-        mergedColumnGroups.push(mergedColumnGroup);
+
+        indexSet.forEach(idx => {
+            if (groups.columns[idx].resolved === true) {
+                shouldMergeColumns = false;
+                return;
+            }
+        })
+        
+        if (shouldMergeRows){
+            const mergedRowGroup: Set<cellType> = new Set();
+            indexSet.forEach(idx => {
+                groups.rows[idx].cells.forEach(cell => {
+                    mergedRowGroup.add(cell);
+                })
+            })
+
+            mergedRowGroups.push(mergedRowGroup);
+        }
+        
+
+        if (shouldMergeColumns) {
+            const mergedColumnGroup: Set<cellType> = new Set();
+            indexSet.forEach(idx => {
+                groups.columns[idx].cells.forEach(cell => {
+                    mergedColumnGroup.add(cell);
+                })
+            })
+
+            mergedColumnGroups.push(mergedColumnGroup);
+        }
     });
     return [mergedRowGroups, mergedColumnGroups];
 }
@@ -254,7 +278,6 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
     // select two contiguous rows/columns
     // check if there are 2 colors contained within
     // scale up to n
-    console.log("testing icicle");
 
     for (let i = 1; i < 4; i++) {
         const [mergedRowGroups, mergedColumnGroups] = getMergedRCGroups(groups, board.length, i);
@@ -262,14 +285,15 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
         for (let group of [...mergedRowGroups, ...mergedColumnGroups]) {
             const colors = new Set<number>();
             for (let cell of group) colors.add(cell.color);
-            if (colors.size == i) {
+
+            // icicle rule
+            if (colors.size === i) {
                 const mergedColorGroup = new Set(
                     Array.from(colors).flatMap(color => Array.from(groups.colorGroups[color].cells || []))
                 );
                 if (mergedColorGroup.size > group.size) {
-                    console.log(`color elimination happening with i = ${i}`);
                     const changes: cellChangeType[] = [];
-
+                    //console.log(`icicle rule invoked, i=${i}`)
                     for (let cell of mergedColorGroup) {
                         if (!group.has(cell)) {
                             cell.playerStatus = "invalid";
@@ -277,28 +301,12 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
                             removeCellFromGroup(cell, groups);
                         }
                     }
-                    console.log(changes);
+                    //console.log(changes);
                     return changes;
                 }
             }
-        }        
-    }
-    return false;
-}
 
-const applyReverseIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
-    console.log("testing reverse icicle")
-
-    for (let i = 1; i < 4; i++) {
-        const [mergedRowGroups, mergedColumnGroups] = getMergedRCGroups(groups, board.length, i);
-
-        for (let group of [...mergedRowGroups, ...mergedColumnGroups]) {
-            // get all the colors present
-            // for each color, see if that entire color group is present inside of the merged group
-            // if this holds for i colors, then we must eliminate everything inside the merged group not 
-            // in the i colors.
-            const colors = new Set<number>();
-            for (let cell of group) colors.add(cell.color);
+            // reverse icicle rule
             const lockedColors = new Set<number>();
             colors.forEach(color => {
                 let isColorLocked = true;
@@ -313,33 +321,154 @@ const applyReverseIcicleRule = (board: boardType, groups: boardGroupsType): cell
                 }
             });
             if (lockedColors.size === i && colors.size > i) {
-                console.log("reverse icicle called")
+                //console.log(`reverse icicle rule invoked, i=${i}`);
                 const changes: cellChangeType[] = [];
                 group.forEach(cell => {
                     if (!lockedColors.has(cell.color)) {
-                        cell.playerStatus = "invalid";
-                        changes.push([cell.row, cell.column, "invalid"]);
-                        removeCellFromGroup(cell, groups);
+                        markInvalidCell(cell, changes, groups);
                     }
                 })
-                console.log(changes);
+                //console.log(changes);
                 return changes;
             }
+        }        
+    }
+    return false;
+}
+
+// performance boost:
+// should do icicle and reverse icicle at "same time" - don't iterate from 1-4 on icicle then do it on reverse icicle
+// also prevents us from having to regenerate the color groups
+
+const markIntersectionOfInvalidatedSets = (cellGroup: cellGroupType, groups: boardGroupsType, board: boardType) => {
+    const invalidationSets: Set<cellType>[] = []; 
+    cellGroup.cells.forEach(cell => {
+        const invalidationSet = new Set<cellType>(getInvalidCells(cell.row, cell.column, board));
+        invalidationSets.push(invalidationSet);
+    });
+    const intersection = invalidationSets.reduce(
+        (prev, current) => new Set([...prev].filter(x => current.has(x)))
+    );
+    if (intersection.size > 0) {
+        const changes: cellChangeType[] = [];
+        for (let cell of intersection) {
+            markInvalidCell(cell, changes, groups);
+        }
+        if (changes.length) {
+            //console.log("intersection rule");
+            //console.log(changes);
+            return changes;
         }
     }
     return false;
 }
 
+const applyIntersectionRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
+    let sortedColorGroups = Array.from(groups.colorGroups).sort(
+        (a, b) => a.cells.size - b.cells.size
+    );
+    sortedColorGroups = sortedColorGroups.filter(group => group.cells.size > 0);
+    
+
+    for (let colorGroup of sortedColorGroups) {
+        const result = markIntersectionOfInvalidatedSets(colorGroup, groups, board);
+        if (result) return result;
+    }
+
+    let sortedRowColumnGroups = [...groups.rows, ...groups.columns].sort(
+        (a, b) => a.cells.size - b.cells.size
+    );
+    sortedRowColumnGroups = sortedRowColumnGroups.filter(group => (group.cells.size > 0 && group.cells.size < 4));
+
+    for (let rcGroup of sortedRowColumnGroups) {
+        const result = markIntersectionOfInvalidatedSets(rcGroup, groups, board);
+        if (result) return result;
+    }
+    return false;
+}
+
+const rulesWithoutBranching = [applyStarPlacementRule, applyIcicleRule, applyIntersectionRule];
+
 // how does reverse icicle rule work?
 // look through a (preferably contiguous) group of rows/columns
 // tbh, the merge group should be its own separate function
+const applyBranchRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
+    //console.log(groups);
+    const allGroups = [...groups.rows, ...groups.columns, ...groups.colorGroups];
+    const filteredGroups = allGroups
+        .filter(group => group.cells.size > 0 && group.cells.size < 4)
+        //.reduce((prev, current) => (prev.cells.size < current.cells.size) ? prev : current);
+
+    if (!filteredGroups.length) {
+        return false;
+    }
+
+    const smallestGroup = filteredGroups
+        .reduce((prev, current) => (prev.cells.size < current.cells.size) ? prev : current);
 
 
-const rules = [applyStarPlacementRule, applyIcicleRule, applyReverseIcicleRule];
+    // choose the smallest group (should be k<4, otherwise return false);
+    // create a copy of the board, place a star in one of the cells
+    // on each copy of the board, run one step of solvePuzzleOneIteration
+    // after each step, compare downstream consequences
+    // if any changes are shared between all branches, apply that change(s) and return
+
+    const branchedBoards: boardType[] = [];
+    const branchedGroupsList: boardGroupsType[] = [];
+    const changeLists: cellChangeType[][] = [];
+    smallestGroup.cells.forEach(cell => {
+        const branchBoard = clone(board);
+        const branchGroups = splitBoardIntoGroups(branchBoard);
+        //console.log(branchBoard);
+        markStarCell(branchBoard[cell.row][cell.column], branchGroups, branchBoard);
+        //console.log(branchBoard);
+
+        branchedBoards.push(branchBoard);
+        branchedGroupsList.push(branchGroups);
+        changeLists.push([] as cellChangeType[]);
+    });
+
+    const changes: cellChangeType[] = [];
+
+    // take turns on each board-group-changes set running solvePuzzleOneIteration
+    // but a version without the branching rule
+    
+    for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < smallestGroup.cells.size; j++) {
+            const result = solvePuzzleOneIteration(branchedBoards[j], branchedGroupsList[j], rulesWithoutBranching);
+            if (typeof result !== "boolean") {
+                changeLists[j].push(...result);
+            }
+        }
+        const intersection: cellChangeType[] = [];
+        changeLists.forEach(changeList => {
+            changeList.forEach(change => {
+                if (changeLists.every(cl => cl.some(c => {
+                    return _.isEqual(c, change);
+                }))) {
+                    intersection.push(change);
+                }
+            })
+        })
+
+        if (intersection.length) {
+            //console.log("intersection found");
+            intersection.forEach(change => {
+                markInvalidCell(board[change[0]][change[1]], changes, groups);
+            })
+        }
+    }
+
+    return (changes.length ? changes : false);
+}
+
+
+const rulesWithBranching = [applyStarPlacementRule, applyIcicleRule, applyIntersectionRule, applyBranchRule];
 
 
 
-const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType) => {
+
+const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType, rules: ruleFunctionType[]): cellChangeType[] | boolean => {
     if (isBoardImpossible(groups)) {
         return false;
     }
@@ -349,7 +478,6 @@ const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType) => {
     for (let rule of rules) {
         const result = rule(board, groups);
         if (result) {
-            console.log("a rule was invoked");
             return result;
         }
     }
@@ -362,20 +490,19 @@ const solvePuzzleRuleBased = (board: boardType) => {
     // so editing something in the board will edit something in the groups and vice versa
     // each group should ONLY contain valid cells, will make things easier
     const groups = splitBoardIntoGroups(board);
+    const solveStartTime = performance.now();
 
     let iterations = 0;
     while (iterations < 100) {
-        const result = solvePuzzleOneIteration(board, groups);
+        const result = solvePuzzleOneIteration(board, groups, rulesWithBranching);
         if (!result || result === true) {
-            console.log("breaking");
-            break;
+            const solveEndTime = performance.now();
+            return result;
         }
         iterations++;
     }
+
+    const solveEndTime = performance.now();
 }
-
-
-
-
 
 export {validateSolution, solvePuzzleRecursively, solvePuzzleRuleBased}
