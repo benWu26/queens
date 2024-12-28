@@ -269,8 +269,3 @@ const testGenerationSpeed = (size: number, k: number) => {
 }
 
 export {generateValidBoard, testGenerationSpeed, generateOneBoard}
-
-
-// possible optimizations:
-// create a rule-based solver
-// start by having the positions of the queens already decided, and only allowing edges to be selected if they connect a queen to a non-queen cell.

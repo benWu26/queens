@@ -215,6 +215,18 @@ const generateConsecutiveIndexSets = (n: number, r: number) => {
     return indexSets;
 }
 
+/**
+ * Given a boardGroupsType, total_size, and merge_size, this function will group the rows and columns
+ * into sets of size merge_size, and return two arrays of Sets, one for each. The sets will contain
+ * all the cells in the corresponding groups, and will be ordered in the same order as the original
+ * indexSets.
+ *
+ * @param {boardGroupsType} groups The groups of rows and columns to be merged.
+ * @param {number} total_size The total number of rows or columns to be grouped.
+ * @param {number} merge_size The size of each set of indices to be grouped.
+ * @returns {[Set<cellType>[], Set<cellType>[]]} Two arrays of Sets, one for the merged row groups
+ * and one for the merged column groups.
+ */
 const getMergedRCGroups = (groups: boardGroupsType, total_size: number, merge_size: number) => {
     const indexSets = generateConsecutiveIndexSets(total_size, merge_size);
     
@@ -340,6 +352,18 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): cellChangeT
 // should do icicle and reverse icicle at "same time" - don't iterate from 1-4 on icicle then do it on reverse icicle
 // also prevents us from having to regenerate the color groups
 
+/**
+ * Given a group of cells, returns a list of changes to the board if the "intersection of invalidated sets" rule
+ * is applicable. If the rule is not applicable, returns false.
+ * The intersection of invalidated sets rule is as follows: if a group of cells has a set of cells that are
+ * invalidated by all of the cells in the group, then we can invalidate those cells too. This is because
+ * if all of the cells in the group are valid, then the cells in the intersection would be in an invalid
+ * state, which is impossible.
+ * @param {cellGroupType} cellGroup
+ * @param {boardGroupsType} groups
+ * @param {boardType} board
+ * @returns {cellChangeType[] | false}
+ */
 const markIntersectionOfInvalidatedSets = (cellGroup: cellGroupType, groups: boardGroupsType, board: boardType) => {
     const invalidationSets: Set<cellType>[] = []; 
     cellGroup.cells.forEach(cell => {
@@ -363,6 +387,14 @@ const markIntersectionOfInvalidatedSets = (cellGroup: cellGroupType, groups: boa
     return false;
 }
 
+/**
+ * Applies the "intersection of invalidated sets" rule to the given board and groups.
+ * This rule states that if a group of cells has a set of cells that are invalidated by all of the cells in the group, then we can invalidate those cells too.
+ * This is because if all of the cells in the group are valid, then the cells in the intersection would be in an invalid state, which is impossible.
+ * @param {boardType} board The board to apply the rule to.
+ * @param {boardGroupsType} groups The groups of cells on the board.
+ * @returns {cellChangeType[] | false} An array of cell changes if the rule was applied, false otherwise.
+ */
 const applyIntersectionRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
     let sortedColorGroups = Array.from(groups.colorGroups).sort(
         (a, b) => a.cells.size - b.cells.size
@@ -389,9 +421,17 @@ const applyIntersectionRule = (board: boardType, groups: boardGroupsType): cellC
 
 const rulesWithoutBranching = [applyStarPlacementRule, applyIcicleRule, applyIntersectionRule];
 
-// how does reverse icicle rule work?
-// look through a (preferably contiguous) group of rows/columns
-// tbh, the merge group should be its own separate function
+
+/**
+ * Applies the branching rule to the given board and groups.
+ * The branching rule is as follows: given a group of cells of size k<4, create a copy of the board for each cell in the group, and place a star in one of the cells.
+ * Then, for each branch, run one step of solvePuzzleOneIteration, but without the branching rule.
+ * After each step, compare downstream consequences between all branches.
+ * If any changes are shared between all branches, apply that change(s) and return.
+ * @param {boardType} board The board to apply the rule to.
+ * @param {boardGroupsType} groups The groups of cells on the board.
+ * @returns {cellChangeType[] | false} An array of cell changes if the rule was applied, false otherwise.
+ */
 const applyBranchRule = (board: boardType, groups: boardGroupsType): cellChangeType[] | false => {
     //console.log(groups);
     const allGroups = [...groups.rows, ...groups.columns, ...groups.colorGroups];
@@ -466,8 +506,17 @@ const applyBranchRule = (board: boardType, groups: boardGroupsType): cellChangeT
 const rulesWithBranching = [applyStarPlacementRule, applyIcicleRule, applyIntersectionRule, applyBranchRule];
 
 
-
-
+/**
+ * Runs one iteration of the rule-based solver on the given board and groups.
+ * If the board is impossible, or if the board is solved, returns true or false.
+ * Otherwise, applies each rule in the given list of rules to the board and groups.
+ * If any rule returns a change list, applies those changes and returns the list.
+ * If no rule returns a change list, returns false.
+ * @param {boardType} board The board to solve.
+ * @param {boardGroupsType} groups The groups of cells on the board.
+ * @param {ruleFunctionType[]} rules The list of rules to apply.
+ * @returns {cellChangeType[] | boolean} The change list if a rule was applied, or true if the board is solved, or false if the board is impossible.
+ */
 const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType, rules: ruleFunctionType[]): cellChangeType[] | boolean => {
     if (isBoardImpossible(groups)) {
         return false;
@@ -484,25 +533,30 @@ const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType, rule
     return false;
 }
 
+/**
+ * Solves the given puzzle using the rule-based solver.
+ * The rule-based solver works by applying all of the rules in the given list of rules to the board and groups.
+ * If any rule returns a change list, applies those changes and returns the list.
+ * If no rule returns a change list, returns false.
+ * If the board is impossible, or if the board is solved, returns true or false.
+ * @param {boardType} board The board to solve.
+ * @returns {cellChangeType[] | boolean} The change list if a rule was applied, or true if the board is solved, or false if the board is impossible.
+ */
 const solvePuzzleRuleBased = (board: boardType) => {
     // splitting the board into groups will help out significantly.
     // especially because the board is comprised of cells, and cells are objects,
     // so editing something in the board will edit something in the groups and vice versa
     // each group should ONLY contain valid cells, will make things easier
     const groups = splitBoardIntoGroups(board);
-    const solveStartTime = performance.now();
 
     let iterations = 0;
     while (iterations < 100) {
         const result = solvePuzzleOneIteration(board, groups, rulesWithBranching);
         if (!result || result === true) {
-            const solveEndTime = performance.now();
             return result;
         }
         iterations++;
     }
-
-    const solveEndTime = performance.now();
 }
 
 export {validateSolution, solvePuzzleRecursively, solvePuzzleRuleBased}

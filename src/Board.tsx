@@ -27,6 +27,9 @@ function Board(props: boardPropType) {
         }
     }, []);
 
+    // when the mouse moves out of the board, we want to set mouseDownRef to false.
+    // when the mouse re-enters the board, we want to see 
+
 
 
     //BEN FUNCTION FOR UNDO
@@ -50,7 +53,29 @@ function Board(props: boardPropType) {
                     suppressMouseRef.current = false;
                 }, 50);
             }} 
-            onMouseUp={() => {mouseDownRef.current = false}}>
+            onMouseUp={() => {mouseDownRef.current = false}}
+            onMouseLeave={() => {mouseDownRef.current = false}}
+            onMouseEnter={(e) => {
+                // if the left mouse button (corresponding to the 0th position of the binary string) is pressed:
+                if (e.buttons & (1)) {
+                    mouseDownRef.current = true;
+
+                    // dispatch a mouseOver event to the cell being pointed at
+                    const selectedCell = document.elementFromPoint(e.clientX, e.clientY);
+                    if (selectedCell instanceof HTMLElement) {
+                        const event = new MouseEvent('mouseover', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true,
+                            clientX: e.clientX,
+                            clientY: e.clientY
+                        });
+                        selectedCell.dispatchEvent(event);
+                    }
+                } 
+
+                
+            }}>
                 {
                     // 2 layers of mapping
                     board.map((row, rowIndex) => row.map((cell, columnIndex) => {
