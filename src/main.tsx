@@ -5,7 +5,7 @@ import Board from './Board.tsx'
 import rfdc from 'rfdc'
 import {generateValidBoard} from './BoardGenerator.ts'
 
-const puzzleBoard = generateValidBoard(8);
+const puzzleBoard = generateValidBoard(10);
 
 
 createRoot(document.getElementById('root')!).render(

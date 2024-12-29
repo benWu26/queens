@@ -7,6 +7,11 @@ import {cellChangeType, ruleFunctionType, boardGroupsType} from "./types"
 
 // --------------------------- SOLUTION VALIDATION ------------------------------
 
+const areTwoCellsMutuallyExclusive = (cell1: cellType, cell2: cellType) => {
+    if (cell1 === cell2) return false;
+    return (cell1.row === cell2.row || cell1.column === cell2.column || cell1.color === cell2.color);
+}
+
 /**
  * Validates whether a given board is a solution to the puzzle.
  * To be a solution, the board must have exactly one star in each row.
@@ -15,21 +20,25 @@ import {cellChangeType, ruleFunctionType, boardGroupsType} from "./types"
  * @returns {boolean} whether the given board is a solution
  */
 const validateSolution = (board: boardType): boolean => {
-    let numStars = 0;
+    const stars: cellType[] = []
     for (let [rowIndex, row] of board.entries()) {
         for (let [columnIndex, cell] of row.entries()) {
             if (cell.playerStatus === "star") {
-                numStars++;
-                const invalidCells = getInvalidCells(rowIndex, columnIndex, board);
-                for (let c of invalidCells) {
-                    if (c.playerStatus === "star") {
-                        return false;
-                    }
-                }
+                stars.push(cell);
             }
         }
     }
-    return (numStars === board.length) ? true : false;
+    if (stars.length !== board.length) return false;
+
+    for (let i = 0; i < stars.length - 1; i++) {
+        for (let j = i + 1; j < stars.length; j++) {
+            if (areTwoCellsMutuallyExclusive(stars[i], stars[j])) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 /**
