@@ -10,12 +10,15 @@ import { produce } from "immer";
 const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
     "valid": "invalid",
     "invalid": "star",
-    "star": "valid"
+    "star": "valid",
+
+    //add a cross to valid
+    "error": "valid"
 }
 
 
 //create an array of tuples of [row, column, valid/invalid]
-interface event {//each event is a row, column, and validity
+export interface event {//each event is a row, column, and validity
     xCoord: number;
     yCoord: number;
     validity: playerStatusType;
@@ -24,6 +27,7 @@ type eventgroup = event[];  //for when a group of events happen in dragging(at l
 
 type eventstack = eventgroup[]; //creates a stack of event groups
 
+let eventGroup: eventgroup = [];
 let eventStack: eventstack = []; //creates an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
 
 
@@ -66,7 +70,12 @@ const autoInvalidateOneCell = (rowIndex: number, columnIndex: number, cell: cell
     if (cell.playerStatus !== "star") {
         cell.playerStatus = "invalid";
         cell.causes.push([rowIndex, columnIndex]);
+    } 
+    else{
+        cell.playerStatus = "error";
+        // cell.causes.push([rowIndex, columnIndex]);
     }
+
 }
 
 /**
@@ -119,13 +128,23 @@ const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: b
  * @returns {boardType}
  */
 const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boardType): boardType => {
-    console.log("invalidateCellOnDrag called")
+    //console.log("invalidateCellOnDrag called")
 
     if (board[rowIndex][columnIndex].playerStatus === "valid") {
+
         console.log("if branch taken");
+      
+        const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+            xCoord: rowIndex,
+            yCoord: columnIndex,
+            validity: "valid",
+        };
+
+        //adds to group
+        pushEventGroup(currentEvent);
 
         return produce(board, (draftBoard) => {
-            draftBoard[rowIndex][columnIndex].playerStatus = "invalid"
+            draftBoard[rowIndex][columnIndex].playerStatus = "invalid";
             draftBoard[rowIndex][columnIndex].causes.push("human");
         })
     } else {
@@ -173,6 +192,7 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
         } else {
             // Transition from star to valid
             removeInvalidationCause(rowIndex, columnIndex, draftBoard);
+            reverseErrors(rowIndex, columnIndex, draftBoard);
         }
     });
 }
@@ -193,6 +213,7 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
             //read latest event group
             let currentEventGroup:eventgroup = eventStack[eventStack.length - 1];
 
+
             //pop off the array
             eventStack.pop();
 
@@ -204,6 +225,7 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
                 const cell = draftBoard[rowIndex][columnIndex];
 
                 const undoState = currentEventGroup[i].validity;
+
 
                 cell.playerStatus = undoState;
 
@@ -217,16 +239,12 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
                     
                     autoInvalidateMultipleCells(rowIndex, columnIndex, draftBoard);
                 }
-
                 else{
                     cell.causes = [];
                 }
-
             }
-
         });
     }
-    
 }
 
 // RESET STATE
@@ -242,4 +260,30 @@ const resetBoardState = (board: boardType) => {
     });
 }
 
-export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, resetBoardState}
+//EVENT GROUP HELPER FUNCTIONS
+
+//create a event group 
+const emptyEventGroup = () => {
+    eventGroup = []; //empties group 
+}
+
+const pushEventGroup = (currentEvent: event) => {
+    eventGroup.push(currentEvent);
+}
+
+
+const addGroupToStack = () => { //when mouseup, stop adding to group and push into main stack
+    if(eventGroup.length !== 0 ){
+        eventStack.push(eventGroup);
+    }
+}
+
+const reverseErrors = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const checkCells = getInvalidCells(rowIndex, columnIndex, board);
+        checkCells.forEach((cell) => {
+            if(cell.playerStatus == "error")
+                cell.playerStatus = "star";
+        })
+}
+
+export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, emptyEventGroup, addGroupToStack, resetBoardState}

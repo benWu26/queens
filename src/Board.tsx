@@ -2,9 +2,12 @@ import { useCallback, useState, useRef, useMemo } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
+
+import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, event, resetBoardState}  from "./BoardInteractionLogic";
+
 import rfdc from "rfdc";
 const clone = rfdc();
-import { updateBoard, invalidateCellOnDrag, undoEvent, resetBoardState } from "./BoardInteractionLogic";
+
 import { solvePuzzleRecursively } from "./BoardSolver";
 import {validateSolution} from "./BoardSolver"
 import Stopwatch from "./Stopwatch";
@@ -12,6 +15,7 @@ import { borderType } from "./types";
 
 
 function Board(props: boardPropType) {
+    
     // using board as a state variable
     const [board, setBoard] = useState(clone(props.board));
 
@@ -69,6 +73,7 @@ function Board(props: boardPropType) {
     const onDrag = useCallback((rowIndex: number, columnIndex: number): void => {
         if (mouseDownRef.current && !suppressMouseRef.current) {
             setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
+
         }
     }, []);
 
@@ -99,10 +104,20 @@ function Board(props: boardPropType) {
                 setTimeout(() => {
                     suppressMouseRef.current = false;
                 }, 50);
+
+                //create a new event group/empties
+                emptyEventGroup();
+                                              
+
             }} 
-            onMouseUp={() => {mouseDownRef.current = false}}
-            onMouseLeave={() => {
-                mouseDownRef.current = false}}
+
+            onMouseUp={() => {
+                mouseDownRef.current = false;
+                  addGroupToStack(); //adds to the stack;
+                }
+            }
+            onMouseLeave={() => {mouseDownRef.current = false}}
+
             onMouseEnter={(e) => {
                 // if the left mouse button (corresponding to the 0th position of the binary string) is pressed:
                 if (e.buttons & (1)) {
