@@ -3,6 +3,8 @@ import { boardType, playerStatusType, cellType, cellGroupType } from "./types";
 import rfdc from "rfdc";
 const clone = rfdc();
 import _ from "lodash";
+import {cellChangeType, ruleFunctionType, boardGroupsType} from "./types"
+
 // --------------------------- SOLUTION VALIDATION ------------------------------
 
 /**
@@ -85,14 +87,7 @@ const solvePuzzleRecursively = (board: boardType) => {
 // at the start of each run of rules, check if the board is solved (call validateSolution)
 // if validateSolution returns true, return the curent state of the board
 
-type cellChangeType = [number, number, playerStatusType];
-type ruleFunctionType = (board: boardType, groups: boardGroupsType) => cellChangeType[] | false;
 
-type boardGroupsType = {
-    rows: cellGroupType[];
-    columns: cellGroupType[];
-    colorGroups: cellGroupType[];
-};
 
 const createDefaultCellGroup = (): cellGroupType => {
     return {

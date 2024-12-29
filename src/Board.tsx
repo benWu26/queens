@@ -3,7 +3,9 @@ import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
 import { updateBoard, invalidateCellOnDrag, undoEvent, resetBoardState } from "./BoardInteractionLogic";
+import { solvePuzzleRecursively } from "./BoardSolver";
 import {validateSolution} from "./BoardSolver"
+import Stopwatch from "./Stopwatch";
 
 
 function Board(props: boardPropType) {
@@ -79,6 +81,43 @@ function Board(props: boardPropType) {
                 {
                     // 2 layers of mapping
                     board.map((row, rowIndex) => row.map((cell, columnIndex) => {
+                        let bottomBorder = false;
+                        let rightBorder = false;
+                        let topBorder = false;
+                        let leftBorder = false;
+
+                        if (rowIndex % 2 === 0) {
+                            if (rowIndex > 0) {
+                                if (cell.color !== board[rowIndex-1][columnIndex].color) {
+                                    topBorder = true;
+                                }
+                            }
+
+                            if (rowIndex < board.length - 1){
+                                if (cell.color !== board[rowIndex+1][columnIndex].color) {
+                                    bottomBorder = true;
+                                }
+                            }
+                        }
+
+                        if (columnIndex % 2 === 0) {
+                            if (columnIndex > 0) {
+                                if (cell.color !== board[rowIndex][columnIndex-1].color) {
+                                    leftBorder = true;
+                                }
+                            }
+
+                            if (columnIndex < board.length - 1) {
+                                if (cell.color !== board[rowIndex][columnIndex+1].color) {
+                                    rightBorder = true;
+                                }
+                            }
+                        }
+                        
+                        
+                        
+
+                        
                         // cell props:
                         // key (calculated by treating the 2d array as a 1d array)
                         // cell: cellType
@@ -86,6 +125,10 @@ function Board(props: boardPropType) {
                         return <Cell key={rowIndex * board.length + columnIndex}
                             color={cell.color}
                             playerStatus={cell.playerStatus}
+                            rightBorder={rightBorder}
+                            bottomBorder={bottomBorder}
+                            leftBorder = {leftBorder}
+                            topBorder = {topBorder}
                             updatePlayerStatusClick={() => onCellClick(rowIndex, columnIndex)}
                             updatePlayerStatusDrag={() => onDrag(rowIndex, columnIndex)}
                             ></Cell>
@@ -93,6 +136,7 @@ function Board(props: boardPropType) {
                     }))
                 }
             </div>
+
             <p>{validateSolution(board) ? "complete" : "incomplete"}</p>
 
             {/* The Undo button */}
@@ -103,6 +147,9 @@ function Board(props: boardPropType) {
             <button onClick={onResetButtonClick}>
                 RESET
             </button>
+            <Stopwatch isRunning={!validateSolution(board)}></Stopwatch>
+
+            <p>possible solutions: {solvePuzzleRecursively(props.board).length}</p>
         </div>
     )
 }

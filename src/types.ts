@@ -21,6 +21,10 @@ type cellPropType = {
     key: number,
     color: number,
     playerStatus: playerStatusType,
+    topBorder: boolean,
+    rightBorder: boolean,
+    bottomBorder: boolean,
+    leftBorder: boolean
     updatePlayerStatusClick: () => void,
     updatePlayerStatusDrag: () => void
 }
@@ -45,5 +49,21 @@ type cellGroupType = {
     resolved: boolean
 }
 
+type cellChangeType = [number, number, playerStatusType];
+type ruleFunctionType = (board: boardType, groups: boardGroupsType) => cellChangeType[] | false;
 
-export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType, cellGroupType };
+type boardGroupsType = {
+    rows: cellGroupType[];
+    columns: cellGroupType[];
+    colorGroups: cellGroupType[];
+};
+
+// ---------------STOPWATCH------------------------
+type stopWatchPropTypes = {
+    isRunning: boolean
+}
+
+export type {stopWatchPropTypes}
+
+export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType, 
+    cellGroupType, cellChangeType, ruleFunctionType, boardGroupsType };
