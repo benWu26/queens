@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useMemo } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
@@ -6,11 +6,52 @@ import { updateBoard, invalidateCellOnDrag, undoEvent, resetBoardState } from ".
 import { solvePuzzleRecursively } from "./BoardSolver";
 import {validateSolution} from "./BoardSolver"
 import Stopwatch from "./Stopwatch";
+import { borderType } from "./types";
 
 
 function Board(props: boardPropType) {
     // using board as a state variable
     const [board, setBoard] = useState(props.board);
+
+    const borders = useMemo(() => {
+        return props.board.map((row, rowIndex) => row.map((cell, columnIndex) => {
+            console.log("border recalculated");
+            let bottomBorder = false;
+            let rightBorder = false;
+            let topBorder = false;
+            let leftBorder = false;
+    
+            if (rowIndex % 2 === 0) {
+                if (rowIndex > 0) {
+                    if (cell.color !== props.board[rowIndex-1][columnIndex].color) {
+                        topBorder = true;
+                    }
+                }
+    
+                if (rowIndex < props.board.length - 1){
+                    if (cell.color !== props.board[rowIndex+1][columnIndex].color) {
+                        bottomBorder = true;
+                    }
+                }
+            }
+    
+            if (columnIndex % 2 === 0) {
+                if (columnIndex > 0) {
+                    if (cell.color !== props.board[rowIndex][columnIndex-1].color) {
+                        leftBorder = true;
+                    }
+                }
+    
+                if (columnIndex < props.board.length - 1) {
+                    if (cell.color !== props.board[rowIndex][columnIndex+1].color) {
+                        rightBorder = true;
+                    }
+                }
+            }
+            
+            return {bottomBorder, rightBorder, topBorder, leftBorder};
+        }));
+    }, [props.board]);
 
     // ref variable for detecting if mouse is pressed or not
     const mouseDownRef = useRef(false);
@@ -28,6 +69,8 @@ function Board(props: boardPropType) {
             setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
         }
     }, []);
+
+
 
     // when the mouse moves out of the board, we want to set mouseDownRef to false.
     // when the mouse re-enters the board, we want to see 
@@ -56,7 +99,8 @@ function Board(props: boardPropType) {
                 }, 50);
             }} 
             onMouseUp={() => {mouseDownRef.current = false}}
-            onMouseLeave={() => {mouseDownRef.current = false}}
+            onMouseLeave={() => {
+                mouseDownRef.current = false}}
             onMouseEnter={(e) => {
                 // if the left mouse button (corresponding to the 0th position of the binary string) is pressed:
                 if (e.buttons & (1)) {
@@ -74,61 +118,19 @@ function Board(props: boardPropType) {
                         });
                         selectedCell.dispatchEvent(event);
                     }
-                } 
-
-                
+                }                 
             }}>
                 {
                     // 2 layers of mapping
                     board.map((row, rowIndex) => row.map((cell, columnIndex) => {
-                        let bottomBorder = false;
-                        let rightBorder = false;
-                        let topBorder = false;
-                        let leftBorder = false;
-
-                        if (rowIndex % 2 === 0) {
-                            if (rowIndex > 0) {
-                                if (cell.color !== board[rowIndex-1][columnIndex].color) {
-                                    topBorder = true;
-                                }
-                            }
-
-                            if (rowIndex < board.length - 1){
-                                if (cell.color !== board[rowIndex+1][columnIndex].color) {
-                                    bottomBorder = true;
-                                }
-                            }
-                        }
-
-                        if (columnIndex % 2 === 0) {
-                            if (columnIndex > 0) {
-                                if (cell.color !== board[rowIndex][columnIndex-1].color) {
-                                    leftBorder = true;
-                                }
-                            }
-
-                            if (columnIndex < board.length - 1) {
-                                if (cell.color !== board[rowIndex][columnIndex+1].color) {
-                                    rightBorder = true;
-                                }
-                            }
-                        }
-                        
-                        
-                        
-
-                        
-                        // cell props:
-                        // key (calculated by treating the 2d array as a 1d array)
-                        // cell: cellType
-                        // updatePlayerStatus: called when the cell is clicked
+                        const cellBorder = borders[rowIndex][columnIndex];
                         return <Cell key={rowIndex * board.length + columnIndex}
                             color={cell.color}
                             playerStatus={cell.playerStatus}
-                            rightBorder={rightBorder}
-                            bottomBorder={bottomBorder}
-                            leftBorder = {leftBorder}
-                            topBorder = {topBorder}
+                            rightBorder={cellBorder.rightBorder}
+                            bottomBorder={cellBorder.bottomBorder}
+                            leftBorder = {cellBorder.leftBorder}
+                            topBorder = {cellBorder.topBorder}
                             updatePlayerStatusClick={() => onCellClick(rowIndex, columnIndex)}
                             updatePlayerStatusDrag={() => onDrag(rowIndex, columnIndex)}
                             ></Cell>
@@ -147,7 +149,7 @@ function Board(props: boardPropType) {
             <button onClick={onResetButtonClick}>
                 RESET
             </button>
-            <Stopwatch isRunning={!validateSolution(board)}></Stopwatch>
+            {/* <Stopwatch isRunning={!validateSolution(board)}></Stopwatch> */}
 
             <p>possible solutions: {solvePuzzleRecursively(props.board).length}</p>
         </div>
