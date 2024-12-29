@@ -37,6 +37,15 @@ type boardPropType = {
     board: boardType
 }
 
+type borderType = {
+    bottomBorder: boolean,
+    topBorder: boolean, 
+    leftBorder: boolean,
+    rightBorder: boolean
+}
+
+export type {borderType}
+
 // -------------------------------------- GRAPH STUFF ---------------------
 type nodeLabelType = {
     size: number,

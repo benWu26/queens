@@ -2,6 +2,8 @@ import { useCallback, useState, useRef, useMemo } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
+import rfdc from "rfdc";
+const clone = rfdc();
 import { updateBoard, invalidateCellOnDrag, undoEvent, resetBoardState } from "./BoardInteractionLogic";
 import { solvePuzzleRecursively } from "./BoardSolver";
 import {validateSolution} from "./BoardSolver"
@@ -11,7 +13,7 @@ import { borderType } from "./types";
 
 function Board(props: boardPropType) {
     // using board as a state variable
-    const [board, setBoard] = useState(props.board);
+    const [board, setBoard] = useState(clone(props.board));
 
     const borders = useMemo(() => {
         return props.board.map((row, rowIndex) => row.map((cell, columnIndex) => {
@@ -149,9 +151,7 @@ function Board(props: boardPropType) {
             <button onClick={onResetButtonClick}>
                 RESET
             </button>
-            {/* <Stopwatch isRunning={!validateSolution(board)}></Stopwatch> */}
-
-            <p>possible solutions: {solvePuzzleRecursively(props.board).length}</p>
+            <Stopwatch isRunning={!validateSolution(board)}></Stopwatch>
         </div>
     )
 }

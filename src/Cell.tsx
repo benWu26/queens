@@ -47,13 +47,14 @@ function Cell(props: cellPropType) {
                 props.updatePlayerStatusClick();
             }
         }
-        onMouseOver={
+        onMouseEnter={
             () => {
                 props.updatePlayerStatusDrag();
             }
         }>
             {/* What to display in the cell depending on the playerStatus */}
             {symbols[props.playerStatus]}
+        
         </div>
     )
 }

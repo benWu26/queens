@@ -2,6 +2,7 @@ import { cellType, boardType, playerStatusType} from "./types"
 import _ from "lodash";
 import rfdc from 'rfdc';
 const clone = rfdc();
+import { produce } from "immer";
 
 
 // ------------------------HELPER STUFF----------------------------
@@ -122,10 +123,11 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
 
     if (board[rowIndex][columnIndex].playerStatus === "valid") {
         console.log("if branch taken");
-        const newBoard = clone(board);
-        newBoard[rowIndex][columnIndex].playerStatus = "invalid"
-        newBoard[rowIndex][columnIndex].causes.push("human");
-        return newBoard;
+
+        return produce(board, (draftBoard) => {
+            draftBoard[rowIndex][columnIndex].playerStatus = "invalid"
+            draftBoard[rowIndex][columnIndex].causes.push("human");
+        })
     } else {
         return board;
     }
@@ -144,41 +146,35 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
  * @param {boardType} board
  */
 const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => { //UPDATE BOARD GETS CALLED WHEN CLICKED ONA A CELL
-    const newBoard: boardType = clone(board); 
-    const clickedCell = newBoard[rowIndex][columnIndex];
-    const currentStatus = clickedCell.playerStatus;
-    const nextStatus = playerStatusTransitions[currentStatus];
-    clickedCell.playerStatus = nextStatus;
+    return produce(board, (draftBoard) => {
+        const clickedCell = draftBoard[rowIndex][columnIndex] as cellType;
+        const currentStatus = clickedCell.playerStatus;
+        const nextStatus = playerStatusTransitions[currentStatus];
+        clickedCell.playerStatus = nextStatus;
 
-    const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
-        xCoord: rowIndex,
-        yCoord: columnIndex,
-        validity: currentStatus,
-    };
+        // Save the event to allow undo functionality
+        const currentEvent: event = {
+            xCoord: rowIndex,
+            yCoord: columnIndex,
+            validity: currentStatus,
+        };
 
-    //initlizize a group(this case itll just be a single event tho)
-    let singleEvent:eventgroup = [];
+        // Initialize a single-event group and add it to the event stack
+        const singleEvent: eventgroup = [currentEvent];
+        eventStack.push(singleEvent);
 
-    //add to eventgroup as a single shit
-    singleEvent.push(currentEvent);
-
-    //add the new group to the overall array
-    eventStack.push(singleEvent);
-
-
-
-    if (nextStatus === "invalid") { // transition from valid to invalid
-        clickedCell.causes.push("human");
-    } else if (nextStatus === "star") { // transition from invalid to star
-        clickedCell.causes = [];
-
-        autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
-
-    } else { // transition from star to valid
-        removeInvalidationCause(rowIndex, columnIndex, newBoard);
-    }
-
-    return newBoard;
+        if (nextStatus === "invalid") {
+            // Transition from valid to invalid
+            clickedCell.causes.push("human");
+        } else if (nextStatus === "star") {
+            // Transition from invalid to star
+            clickedCell.causes = [];
+            autoInvalidateMultipleCells(rowIndex, columnIndex, draftBoard);
+        } else {
+            // Transition from star to valid
+            removeInvalidationCause(rowIndex, columnIndex, draftBoard);
+        }
+    });
 }
 
 
@@ -192,44 +188,43 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 
 
         //clone a new board
-        const newBoard: boardType = clone(board);
-    
-        //read latest event group
-        let currentEventGroup:eventgroup = eventStack[eventStack.length - 1];
+        return produce(board, (draftBoard) => {
 
-        //pop off the array
-        eventStack.pop();
+            //read latest event group
+            let currentEventGroup:eventgroup = eventStack[eventStack.length - 1];
 
-        for (let i = 0; i < currentEventGroup.length; i++) { //for each element in the event group
-            const rowIndex = currentEventGroup[i].xCoord;
-            const columnIndex = currentEventGroup[i].yCoord;
+            //pop off the array
+            eventStack.pop();
 
-            //grab the cell using the specific indeces
-            const cell = newBoard[rowIndex][columnIndex];
+            for (let i = 0; i < currentEventGroup.length; i++) { //for each element in the event group
+                const rowIndex = currentEventGroup[i].xCoord;
+                const columnIndex = currentEventGroup[i].yCoord;
 
-            const undoState = currentEventGroup[i].validity;
+                //grab the cell using the specific indeces
+                const cell = draftBoard[rowIndex][columnIndex];
 
-            cell.playerStatus = undoState;
+                const undoState = currentEventGroup[i].validity;
 
-            //reads the undo state and turns it into what cell used to (along with the changes)
-            if(undoState === "invalid"){ 
-                cell.causes.push("human");
-                removeInvalidationCause(rowIndex, columnIndex, newBoard);
-            }
-            else if (undoState === "star") { 
-                cell.causes = [];
+                cell.playerStatus = undoState;
+
+                //reads the undo state and turns it into what cell used to (along with the changes)
+                if(undoState === "invalid"){ 
+                    cell.causes.push("human");
+                    removeInvalidationCause(rowIndex, columnIndex, draftBoard);
+                }
+                else if (undoState === "star") { 
+                    cell.causes = [];
                     
-                autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
+                    autoInvalidateMultipleCells(rowIndex, columnIndex, draftBoard);
+                }
+
+                else{
+                    cell.causes = [];
+                }
+
             }
 
-            else{
-                cell.causes = [];
-            }
-
-        }
-
-        //at the end return the new board
-        return newBoard;
+        });
     }
     
 }
@@ -237,16 +232,14 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 // RESET STATE
 
 const resetBoardState = (board: boardType) => {
-    const newBoard = clone(board);
-
-    for (let row of newBoard) {
-        for (let cell of row) {
-            cell.playerStatus = "valid";
-            cell.causes = [];
+    return produce(board, draftBoard => {
+        for (let row of draftBoard) {
+            for (let cell of row) {
+                cell.playerStatus = "valid";
+                cell.causes = [];
+            }
         }
-    }
-
-    return newBoard;
+    });
 }
 
 export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, resetBoardState}
