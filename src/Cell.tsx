@@ -1,5 +1,5 @@
 import { cellPropType } from './types';
-import { memo, useState } from 'react';
+import React, { memo, useState } from 'react';
 import dot from './assets/dot.svg';
 import crown from './assets/crown.svg';
 
@@ -20,9 +20,15 @@ const colors = ["skyblue", "gray", "red", "yellow", "green", "purple", "orange",
  */
 function Cell(props: cellPropType) {
     // console.log("cell re-rendered!");
+    const style: React.CSSProperties = { backgroundColor: colors[props.color]};
+
+    style.borderLeft = props.leftBorder ? "2px solid black" : "1px solid black"
+    style.borderRight = props.rightBorder ? "2px solid black" : "1px solid black"
+    style.borderBottom = props.bottomBorder ? "2px solid black" : "1px solid black"
+    style.borderTop = props.topBorder ? "2px solid black" : "1px solid black"
 
     return (
-        <div className="cell" style={{ backgroundColor: colors[props.color] }} 
+        <div className="cell" style={style} 
         onMouseDown={
             () => {
                 props.updatePlayerStatusClick();

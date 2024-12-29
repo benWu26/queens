@@ -250,6 +250,21 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
     
 }
 
+// RESET STATE
+
+const resetBoardState = (board: boardType) => {
+    const newBoard = clone(board);
+
+    for (let row of newBoard) {
+        for (let cell of row) {
+            cell.playerStatus = "valid";
+            cell.causes = [];
+        }
+    }
+
+    return newBoard;
+}
+
 //EVENT GROUP HELPER FUNCTIONS
 
 //create a event group 
@@ -267,4 +282,4 @@ const addGroupToStack = () => { //when mouseup, stop adding to group and push in
 }
 
 
-export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause, emptyEventGroup, pushEventGroup, addGroupToStack, }
+export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, emptyEventGroup, pushEventGroup, addGroupToStack, resetBoardState}

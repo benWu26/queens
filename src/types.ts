@@ -1,3 +1,5 @@
+// ----------------------------------------- CELLS -------------------------------------------
+
 // status of each individual cell
 type playerStatusType = "valid" | "invalid" | "star"
 type realStatusType = "invalid" | "star"
@@ -10,6 +12,8 @@ type cellType = {
     playerStatus: playerStatusType,
     realStatus: realStatusType,
     causes: causesType,
+    row: number, 
+    column: number
 }
 
 // props that need to be passed in when creating a Cell component
@@ -17,25 +21,49 @@ type cellPropType = {
     key: number,
     color: number,
     playerStatus: playerStatusType,
+    topBorder: boolean,
+    rightBorder: boolean,
+    bottomBorder: boolean,
+    leftBorder: boolean
     updatePlayerStatusClick: () => void,
     updatePlayerStatusDrag: () => void
 }
+
+// ------------------------------BOARD------------------------------------
+// type for a board, which is a 2D array of cells
+type boardType = cellType[][];
 
 type boardPropType = {
     board: boardType
 }
 
-// type for a board, which is a 2D array of cells
-type boardType = cellType[][];
-
+// -------------------------------------- GRAPH STUFF ---------------------
 type nodeLabelType = {
     size: number,
     cells: number[]
 }
 
-// type boardGraphType = {
-//     vertices: graphVertexType[],
-//     edges: Set<[number, number]>
-// }
+// -----------RULE BASED SOLVER------------------
+type cellGroupType = {
+    cells: Set<cellType>,
+    resolved: boolean
+}
 
-export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType };
+type cellChangeType = [number, number, playerStatusType];
+type ruleFunctionType = (board: boardType, groups: boardGroupsType) => cellChangeType[] | false;
+
+type boardGroupsType = {
+    rows: cellGroupType[];
+    columns: cellGroupType[];
+    colorGroups: cellGroupType[];
+};
+
+// ---------------STOPWATCH------------------------
+type stopWatchPropTypes = {
+    isRunning: boolean
+}
+
+export type {stopWatchPropTypes}
+
+export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType, 
+    cellGroupType, cellChangeType, ruleFunctionType, boardGroupsType };

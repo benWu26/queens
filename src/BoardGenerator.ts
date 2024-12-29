@@ -1,5 +1,5 @@
 import { cellType, boardType, nodeLabelType} from "./types"
-import { solvePuzzle } from "./BoardSolver";
+import { solvePuzzleRecursively, solvePuzzleRuleBased } from "./BoardSolver";
 import _, { sample } from "lodash";
 import { Graph, json, Edge } from "graphlib";
 import rfdc from "rfdc";
@@ -92,14 +92,28 @@ const mergeNodes = (graph: Graph, stayNode: string, elimNode: string): void =>  
     graph.removeNode(elimNode); // O(E) time
 }
 
-// graph is relatively sparse, so O(V) and O(E) can be treated as identical;
-// mergeNodes takes O(V) time, where V is at most n^2 and decreases over time.
+
+/**
+ * Samples an edge from a given list of edges in a graph, using a given probability function to weight the sampling.
+ * @param {Graph} graph the graph containing the edges
+ * @param {Edge[]} edgeList the list of edges to sample from
+ * @param {(w: any) => any} probabilityFunction a function that takes an edge weight and returns a probability
+ * @returns {Edge} the sampled edge
+ */
 const sampleFromEdgeList = (graph: Graph, edgeList: Edge[], probabilityFunction: (w: any) => any) => {
-    const weights = edgeList.map((edge) => graph.edge(edge).weight)
+    // Calculate the weights of all edges in the list
+    const weights = edgeList.map((edge) => graph.edge(edge).weight);
+
+    // Calculate the probability of each edge being sampled, using the provided probability function
     const probs = weights.map((weight) => probabilityFunction(weight));
+
+    // Calculate the cumulative probability of all edges
     const c = _.sum(probs);
 
+    // Generate a random number between 0 and the cumulative probability
     const rand = Math.random() * c;
+
+    // Iterate through the list of edges and return the first one that is less than or equal to the random number
     let cum = 0;
     for (let i = 0; i < probs.length; i++) {
         cum += probs[i];
@@ -125,9 +139,9 @@ const colorGraph = (graph: Graph, size: number): Graph => {
 
     // Reduce the size of the graph until it has the desired size
     for (let i = 0; i < size**2 - size; i++) { // O(n^2) iterations
-        const probabilityFunction = (n: number) => (1/(n**2))
+        const probabilityFunction = (n: number) => (1/(n**6))
         const edge = sampleFromEdgeList(graph, graph.edges(), probabilityFunction);
-        //commented code: const edge = _.sample(graph.edges());
+        //const edge = _.sample(graph.edges());
         if (edge) {
             // merge the two nodes that this edge connects
             mergeNodes(graph, edge.v, edge.w); // O(E)
@@ -163,13 +177,15 @@ const constructBoardFromGraph = (graph: Graph): boardType => {
         })
     })
     // Create the board by mapping the color map to cells
-    const board: boardType = colorMap.map(row => row.map((c): cellType => {
+    const board: boardType = colorMap.map((row, ridx) => row.map((c, cidx): cellType => {
         // Each cell has a color, player status, real status, and causes
         return {
             color: c,
             playerStatus: "valid",
             realStatus: "invalid",
-            causes: []
+            causes: [],
+            row: ridx,
+            column: cidx
         }
     }))
 
@@ -194,27 +210,47 @@ const generateOneBoard = (size: number): boardType => {
     return board;
 }
 
+
+/**
+ * Generates a valid board of a given size by repeatedly generating boards until a valid one is found.
+ * A valid board is one that has a unique solution.
+ * @param {number} size the size of the board to generate
+ * @returns {boardType} the generated board
+ */
 const generateValidBoard = (size: number): boardType => {
+    // Keep track of the number of iterations it takes to find a valid board
     let num_iterations = 0;
+    // Keep track of the average time it takes to generate a board
     let avg_gen_time = 0;
+    // Keep track of the average time it takes to solve a board
     let avg_solve_time = 0;
 
-    while(true) {
+    const generateValidPuzzleStartTime = performance.now();
+
+    // Keep generating boards until a valid one is found
+    while (true) {
         num_iterations += 1;
-        const generateStartTime = performance.now();
+        const generateOnePuzzleStartTime = performance.now();
+        // Generate a random board of the given size
         const puzzleBoard = generateOneBoard(size);
-        const generateEndTime = performance.now();
-        avg_gen_time += (generateEndTime - generateStartTime);
+        const generateOnePuzzleEndTime = performance.now();
+        // Add the time it took to generate this board to the total
+        avg_gen_time += (generateOnePuzzleEndTime - generateOnePuzzleStartTime);
 
         const solveStartTime = performance.now();
-        const sols = solvePuzzle(clone(puzzleBoard));
+        // Solve the generated board
+        const sols = solvePuzzleRuleBased(clone(puzzleBoard));
         const solveEndTime = performance.now();
+        // Add the time it took to solve this board to the total
         avg_solve_time += (solveEndTime - solveStartTime);
 
-        if (sols.length === 1){
-            console.log(`number of puzzles generated: ${num_iterations}`);
-            console.log(`average puzzle gen time: ${avg_gen_time/num_iterations} ms`);
-            console.log(`average puzzle solve time: ${avg_solve_time/num_iterations} ms`);
+        // If the board has a unique solution, return it
+        if (sols) {
+            const generateValidPuzzleEndTime = performance.now();
+            console.log(`Total generation time: ${generateValidPuzzleEndTime - generateValidPuzzleStartTime} ms`)
+            console.log(`   number of puzzles generated: ${num_iterations}`);
+            console.log(`   average puzzle gen time: ${avg_gen_time / num_iterations} ms`);
+            console.log(`   average puzzle solve time: ${avg_solve_time / num_iterations} ms`);
 
             return puzzleBoard;
         }
@@ -233,8 +269,3 @@ const testGenerationSpeed = (size: number, k: number) => {
 }
 
 export {generateValidBoard, testGenerationSpeed, generateOneBoard}
-
-
-// possible optimizations:
-// create a rule-based solver
-// start by having the positions of the queens already decided, and only allowing edges to be selected if they connect a queen to a non-queen cell.
