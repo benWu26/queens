@@ -9,6 +9,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: black;
+
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
 }
 
 .board {
@@ -23,10 +26,20 @@ body {
 
   border-style: solid;
   border-color: black;
+
+  
+}
+
+.board-container p {
+    color: white;
 }
 
 .symbol {
   width: 100%;
   -webkit-user-drag: none;
   user-select: none;
+}
+
+.stopwatch .display {
+  color: white;
 }

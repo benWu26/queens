@@ -217,7 +217,7 @@ const generateOneBoard = (size: number): boardType => {
  * @param {number} size the size of the board to generate
  * @returns {boardType} the generated board
  */
-const generateValidBoard = (size: number): boardType => {
+const generateValidBoardRuleBased = (size: number): boardType => {
     // Keep track of the number of iterations it takes to find a valid board
     let num_iterations = 0;
     // Keep track of the average time it takes to generate a board
@@ -257,6 +257,34 @@ const generateValidBoard = (size: number): boardType => {
     }
 }
 
+const generateValidBoardRecursive = (size: number): boardType => {
+    let num_iterations = 0;
+    let avg_gen_time = 0;
+    let avg_solve_time = 0;
+
+    while(true) {
+        num_iterations += 1;
+        const generateStartTime = performance.now();
+        const puzzleBoard = generateOneBoard(size);
+        const generateEndTime = performance.now();
+        avg_gen_time += (generateEndTime - generateStartTime);
+
+        const solveStartTime = performance.now();
+        const sols = solvePuzzleRecursively(clone(puzzleBoard));
+        const solveEndTime = performance.now();
+        avg_solve_time += (solveEndTime - solveStartTime);
+
+        if (sols.length === 1){
+            console.log(`number of puzzles generated: ${num_iterations}`);
+            console.log(`average puzzle gen time: ${avg_gen_time/num_iterations} ms`);
+            console.log(`average puzzle solve time: ${avg_solve_time/num_iterations} ms`);
+
+            return puzzleBoard;
+        }
+    }
+}
+
+
 const testGenerationSpeed = (size: number, k: number) => {
     let totalGenerateTime = 0;
     for (let i = 0; i < k; i++) {
@@ -268,4 +296,4 @@ const testGenerationSpeed = (size: number, k: number) => {
     console.log(`average time per iteration: ${totalGenerateTime/k} ms`);
 }
 
-export {generateValidBoard, testGenerationSpeed, generateOneBoard}
+export {generateValidBoardRuleBased, testGenerationSpeed, generateOneBoard, generateValidBoardRecursive}
