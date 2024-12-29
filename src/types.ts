@@ -1,7 +1,7 @@
 // ----------------------------------------- CELLS -------------------------------------------
 
 // status of each individual cell
-type playerStatusType = "valid" | "invalid" | "star"
+type playerStatusType = "valid" | "invalid" | "star" | "error" //added error
 type realStatusType = "invalid" | "star"
 type coordinateType = [number, number]
 type causesType = ("human" | coordinateType)[]

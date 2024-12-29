@@ -2,16 +2,20 @@ import { cellPropType } from './types';
 import React, { memo, useState } from 'react';
 import dot from './assets/dot.svg';
 import crown from './assets/crown.svg';
+import error from './assets/error.svg';
 
 // what should be displayed in the cell
 const symbols = {
     "valid": "",
     "invalid": <img className='symbol' src={dot} alt="" />,
-    "star": <img className='symbol' src={crown} alt="" />
+    "star": <img className='symbol' src={crown} alt="" />,
+
+    //added cross
+    "error": <img className='symbol' src={error} alt="" />
 }
 
 // for mapping colors to numbers (good for customization later!)
-const colors = ["skyblue", "gray", "red", "yellow", "green", "purple", "orange", "pink", "brown", "blue", "cyan", "magenta"]
+const colors = ["skyblue", "lightgray", "red", "yellow", "green", "purple", "orange", "pink", "brown", "blue", "cyan", "magenta"]
 
 /**
  * React component for an individual cell

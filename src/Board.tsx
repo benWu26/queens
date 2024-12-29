@@ -2,7 +2,7 @@ import { useCallback, useState, useRef } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
-import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, pushEventGroup, addGroupToStack, event, resetBoardState}  from "./BoardInteractionLogic";
+import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, event, resetBoardState}  from "./BoardInteractionLogic";
 import { solvePuzzleRecursively } from "./BoardSolver";
 import {validateSolution} from "./BoardSolver"
 import Stopwatch from "./Stopwatch";

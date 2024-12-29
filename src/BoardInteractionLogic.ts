@@ -9,7 +9,10 @@ const clone = rfdc();
 const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
     "valid": "invalid",
     "invalid": "star",
-    "star": "valid"
+    "star": "valid",
+
+    //add a cross to valid
+    "error": "valid"
 }
 
 
@@ -66,7 +69,12 @@ const autoInvalidateOneCell = (rowIndex: number, columnIndex: number, cell: cell
     if (cell.playerStatus !== "star") {
         cell.playerStatus = "invalid";
         cell.causes.push([rowIndex, columnIndex]);
+    } 
+    else{
+        cell.playerStatus = "error";
+        // cell.causes.push([rowIndex, columnIndex]);
     }
+
 }
 
 /**
@@ -164,22 +172,20 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
     const nextStatus = playerStatusTransitions[currentStatus];
     clickedCell.playerStatus = nextStatus;
 
-    // if(nextStatus != "invalid"){ //fixes the double stack issue when clicking on a single cell
-        const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
-            xCoord: rowIndex,
-            yCoord: columnIndex,
-            validity: currentStatus,
-        };
+    const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+        xCoord: rowIndex,
+        yCoord: columnIndex,
+        validity: currentStatus,
+    };
 
-        //initlizize a group(this case itll just be a single event tho)
-        let singleEvent:eventgroup = [];
+    //initlizize a group(this case itll just be a single event tho)
+    let singleEvent:eventgroup = [];
 
-        //add to eventgroup as a single shit
-        singleEvent.push(currentEvent);
+    //add to eventgroup as a single shit
+    singleEvent.push(currentEvent);
 
-        //add the new group to the overall array
-        eventStack.push(singleEvent);
-    //}
+    //add the new group to the overall array
+    eventStack.push(singleEvent);
 
 
     if (nextStatus === "invalid") { // transition from valid to invalid
@@ -189,8 +195,14 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
 
         autoInvalidateMultipleCells(rowIndex, columnIndex, newBoard);
 
+
+
     } else { // transition from star to valid
         removeInvalidationCause(rowIndex, columnIndex, newBoard);
+
+        
+        reverseErrors(rowIndex, columnIndex, newBoard);
+        
     }
 
     return newBoard;
@@ -278,8 +290,17 @@ const pushEventGroup = (currentEvent: event) => {
 
 
 const addGroupToStack = () => { //when mouseup, stop adding to group and push into main stack
-    eventStack.push(eventGroup);
+    if(eventGroup.length !== 0 ){
+        eventStack.push(eventGroup);
+    }
 }
 
+const reverseErrors = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const checkCells = getInvalidCells(rowIndex, columnIndex, board);
+        checkCells.forEach((cell) => {
+            if(cell.playerStatus == "error")
+                cell.playerStatus = "star";
+        })
+}
 
-export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, emptyEventGroup, pushEventGroup, addGroupToStack, resetBoardState}
+export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, emptyEventGroup, addGroupToStack, resetBoardState}
