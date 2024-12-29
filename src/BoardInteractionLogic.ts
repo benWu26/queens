@@ -231,6 +231,7 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 
                 //reads the undo state and turns it into what cell used to (along with the changes)
                 if(undoState === "invalid"){ 
+                    reverseErrors(rowIndex, columnIndex, draftBoard); //create an event for undoing?
                     cell.causes.push("human");
                     removeInvalidationCause(rowIndex, columnIndex, draftBoard);
                 }
@@ -239,7 +240,7 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
                     
                     autoInvalidateMultipleCells(rowIndex, columnIndex, draftBoard);
                 }
-                else{
+                else{ //undo state == valid
                     cell.causes = [];
                 }
             }
