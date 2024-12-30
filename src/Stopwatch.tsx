@@ -11,7 +11,7 @@ function Stopwatch (props: stopWatchPropTypes) {
         if (props.isRunning) {
             intervalIdRef.current = setInterval(() => {
                 setElapsedTime(Date.now() - startTimeRef.current);
-            }, 10);
+            }, 100);
         }
 
         return () => {
@@ -19,6 +19,12 @@ function Stopwatch (props: stopWatchPropTypes) {
         }
         
     }, [props.isRunning])
+
+    useEffect(() => {
+        if (props.reset) {
+            startTimeRef.current = Date.now();
+        }
+    }, [props.reset])
 
     function formatTime() {
         const hours = Math.floor(elapsedTime / (3600000));

@@ -69,7 +69,8 @@ type boardGroupsType = {
 
 // ---------------STOPWATCH------------------------
 type stopWatchPropTypes = {
-    isRunning: boolean
+    isRunning: boolean,
+    reset: boolean
 }
 
 export type {stopWatchPropTypes}

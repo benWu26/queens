@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useMemo } from "react";
+import { useCallback, useState, useRef, useMemo, useEffect } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
@@ -18,6 +18,21 @@ function Board(props: boardPropType) {
     
     // using board as a state variable
     const [board, setBoard] = useState(clone(props.board));
+    const [didBoardChange, setDidBoardChange] = useState(false);
+
+    useEffect(() => {
+        setBoard(b => clone(props.board))
+        setDidBoardChange(d => true);
+    }, [props.board])
+
+    useEffect(() => {
+        if (didBoardChange) {
+            setDidBoardChange(false)
+        }
+    }, [didBoardChange])
+
+
+
 
     const borders = useMemo(() => {
         return props.board.map((row, rowIndex) => row.map((cell, columnIndex) => {
@@ -166,7 +181,7 @@ function Board(props: boardPropType) {
             <button onClick={onResetButtonClick}>
                 RESET
             </button>
-            <Stopwatch isRunning={!validateSolution(board)}></Stopwatch>
+            <Stopwatch isRunning={!validateSolution(board)} reset={didBoardChange}></Stopwatch>
         </div>
     )
 }

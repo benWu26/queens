@@ -31,6 +31,7 @@ const colors = [
     "#00bfe6", // lightteal
 ]
 
+
 /**
  * React component for an individual cell
  * @param {cellPropType} props
@@ -66,7 +67,12 @@ function Cell(props: cellPropType) {
 
 export default memo(Cell, (prevProps, nextProps) => {
     return (
-        prevProps.playerStatus === nextProps.playerStatus
+        prevProps.playerStatus === nextProps.playerStatus &&
+        prevProps.color === nextProps.color &&
+        prevProps.leftBorder === nextProps.leftBorder &&
+        prevProps.rightBorder === nextProps.rightBorder &&
+        prevProps.bottomBorder === nextProps.bottomBorder &&
+        prevProps.topBorder === nextProps.topBorder
     );
 });
 

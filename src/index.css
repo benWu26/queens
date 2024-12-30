@@ -1,8 +1,13 @@
+* {
+  margin: 0;
+}
+
 .cell {
-  width: 50px;
-  height: 50px;
+  /* width: 50px;
+  height: 50px; */
   user-select: none;
   box-sizing: border-box;
+  line-height: 0;
 }
 
 body {
@@ -10,36 +15,82 @@ body {
   align-items: center;
   justify-content: center;
   background-color: black;
+  height: 100dvh;
+  width: 100vw;
+  margin: 0;
 
   font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
 }
 
+
+
 .board {
   background-color: black;
 
-  width: fit-content;
+
+  width: 500px;
+  height: 500px;
+  max-width: 500px;
+  max-height: 500px;
 
   display: grid;
   grid-template-columns: var(--grid-size, 1fr);
   grid-template-rows: var(--grid-size, 1fr);
 
+  .cell {
+    max-width: calc(500px / var(--grid-size));
+    max-height: calc(500px / var(--grid-size));
+    width: calc(500px / var(--grid-size));
+    height: calc(500px / var(--grid-size));
+    overflow: hidden;
+  }
+
 
   border-style: solid;
-  border-color: black;
-
-  
+  border-color: black;  
 }
+
+#root {
+  height: 100%;
+}
+
+
 
 .board-container p {
     color: white;
 }
 
 .symbol {
-  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto; /* Ensures the aspect ratio is preserved */
+  height: auto;
+  object-fit: contain; /* Keeps the image proportionate */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   -webkit-user-drag: none;
   user-select: none;
+  position: relative;
 }
 
 .stopwatch .display {
   color: white;
+}
+
+.full-game {
+  color: white;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+}
+
+.loading-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%)
+
 }
