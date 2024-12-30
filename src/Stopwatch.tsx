@@ -27,11 +27,11 @@ function Stopwatch (props: stopWatchPropTypes) {
     }, [props.reset])
 
     function formatTime() {
-        const hours = Math.floor(elapsedTime / (3600000));
-        const minutes = Math.floor(elapsedTime / (1000 * 60)) % 60;
+        const minutes = Math.floor(elapsedTime / (1000 * 60));
         const seconds = Math.floor(elapsedTime / 1000) % 60;
+        const deciseconds = Math.floor(elapsedTime / 100) % 10
 
-        return `${padZeros(hours)}:${padZeros(minutes)}:${padZeros(seconds)}`;
+        return `${minutes ? minutes + ":" : ""}${minutes ? padZeros(seconds) : seconds}.${deciseconds}`;
 
     }
 
@@ -41,7 +41,7 @@ function Stopwatch (props: stopWatchPropTypes) {
 
     return (
         <div className="stopwatch">
-            <div className="display">{formatTime()}</div>
+            <div className="display">{"solve time: " + formatTime()}</div>
         </div>
     )
 }

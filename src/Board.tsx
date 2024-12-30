@@ -171,7 +171,7 @@ function Board(props: boardPropType) {
                 }
             </div>
 
-            <p>{validateSolution(board) ? "complete" : "incomplete"}</p>
+            <p>{validateSolution(board) ? "Congratulations!" : null}</p>
 
             {/* The Undo button */}
             <button onClick = {onButtonClick}> 
