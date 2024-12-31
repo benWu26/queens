@@ -30,8 +30,8 @@ body {
 
   width: 500px;
   height: 500px;
-  max-width: 500px;
-  max-height: 500px;
+  max-width: 80vh;
+  max-height: 80vh;
 
   display: grid;
   grid-template-columns: var(--grid-size, 1fr);
@@ -52,6 +52,7 @@ body {
 
 #root {
   height: 100%;
+  width: 100%;
 }
 
 
@@ -81,10 +82,25 @@ body {
 .full-game {
   color: white;
   height: 100%;
+  width: 100%;
+  display: grid;
+  align-items: center;
+
+  grid-template-columns: 6fr 1fr;
+}
+
+#placeholder {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: start;
+  align-items: center;
+}
+
+.generate-puzzles {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: first baseline;
 }
 
 .loading-message {
@@ -93,4 +109,26 @@ body {
   left: 50%;
   transform: translate(-50%, -50%)
 
+}
+
+button {
+  background-color: #222222;
+  color: white;
+  border-color: white;
+  border-style: solid;
+  border-radius: 10px;
+}
+
+.x-switch {
+  width: fit-content;
+}
+
+input[type="checkbox" i] {
+  background-color: red;
+  cursor: default;
+  appearance: auto;
+  box-sizing: border-box;
+  margin: 3px 3px 3px 4px;
+  padding: initial;
+  border: initial;
 }

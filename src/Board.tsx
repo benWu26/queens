@@ -81,8 +81,8 @@ function Board(props: boardPropType) {
 
     // updates the board when a cell is clicked
     const onCellClick = useCallback((rowIndex: number, columnIndex: number): void => {
-        setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b));
-    }, [])
+        setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b, props.autoPlace));
+    }, [props.autoPlace])
 
     // when the mouse is dragged over a cell, invalidates the cell if the mouse is pressed
     const onDrag = useCallback((rowIndex: number, columnIndex: number): void => {

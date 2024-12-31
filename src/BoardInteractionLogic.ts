@@ -164,7 +164,7 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
  * @param {number} columnIndex
  * @param {boardType} board
  */
-const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) => { //UPDATE BOARD GETS CALLED WHEN CLICKED ONA A CELL
+const updateBoard = (rowIndex: number, columnIndex: number, board: boardType, autoPlacement: boolean) => { //UPDATE BOARD GETS CALLED WHEN CLICKED ONA A CELL
     return produce(board, (draftBoard) => {
         const clickedCell = draftBoard[rowIndex][columnIndex] as cellType;
         const currentStatus = clickedCell.playerStatus;
@@ -188,10 +188,14 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType) =>
         } else if (nextStatus === "star") {
             // Transition from invalid to star
             clickedCell.causes = [];
-            autoInvalidateMultipleCells(rowIndex, columnIndex, draftBoard);
+            if (autoPlacement) {
+                autoInvalidateMultipleCells(rowIndex, columnIndex, draftBoard);
+            }
         } else {
             // Transition from star to valid
-            removeInvalidationCause(rowIndex, columnIndex, draftBoard);
+            if (autoPlacement) {
+                removeInvalidationCause(rowIndex, columnIndex, draftBoard);
+            }
             reverseErrors(rowIndex, columnIndex, draftBoard);
         }
     });
