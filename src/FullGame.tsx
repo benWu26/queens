@@ -1,8 +1,8 @@
 import {StrictMode, useState, useEffect, useCallback } from 'react'
-import './index.css'
 import Board from './Board.tsx'
 import { boardType } from './types.ts'
 import {generateValidBoardRuleBased} from './BoardGenerator.ts'
+import "./index.css"
 
 function FullGame() {
     const [board, setBoard] = useState<boardType | null>(null);

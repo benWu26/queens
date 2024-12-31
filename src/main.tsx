@@ -1,16 +1,18 @@
 import { InputHTMLAttributes, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import Board from './Board.tsx'
-import rfdc from 'rfdc'
-import {generateValidBoardRuleBased, generateValidBoardRecursive} from './BoardGenerator.ts'
-import FullGame from './FullGame.tsx'
-//const puzzleBoard = generateValidBoardRuleBased(10);
 
+import FullGame from './FullGame.tsx'
+import React from 'react';
+import ReactDOM from 'react-dom'
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <FullGame></FullGame>
+    <BrowserRouter>
+      <App></App>
+    </BrowserRouter>
+    
     
 
   </StrictMode>,
