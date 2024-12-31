@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom"
-import Cell from "./Cell"
-import Board from "./Board"
-import sampleBoard from "./sampleBoard"
+import invertedCrown from "./assets/inverted-crown.svg"
 
 function Instructions() {
     return (
         <div className="instructions">
+            <img src={invertedCrown} alt="" className="logo" />
             <p>
                 No two queens can be in the same row, column, of the same color, or touch diagonally.
             </p>

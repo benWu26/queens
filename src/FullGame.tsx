@@ -8,7 +8,7 @@ function FullGame() {
     const [board, setBoard] = useState<boardType | null>(null);
     const [loading, setLoading] = useState(true);
     const [boardSize, setBoardSize] = useState(8);
-    const [autoPlace, setAutoPlace] = useState(true);
+    const [autoPlace, setAutoPlace] = useState(false);
 
     const generateBoard = useCallback(() => { 
         setLoading(l => true); 

@@ -164,3 +164,7 @@ input[type="checkbox" i] {
 .play-link:hover {
   background-color: #333333;
 }
+
+.logo {
+  max-height: 15vh;
+}
