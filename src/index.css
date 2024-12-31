@@ -137,6 +137,7 @@ input[type="checkbox" i] {
 }
 
 .instructions {
+  font-family: 'Times New Roman', Times, serif;
   color: white;
   display: flex;
   flex-direction: column;
@@ -147,5 +148,19 @@ input[type="checkbox" i] {
 }
 
 .instructions .play-link {
-  color: white
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: white;
+  text-decoration: none;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-right: 10px;
+  padding-left: 10px;
+  border: 2px solid white;
+  border-radius: 10px;
+
+
+}
+
+.play-link:hover {
+  background-color: #333333;
 }
