@@ -36,7 +36,7 @@ function FullGame() {
             <div className='generate-puzzles'>
                 <div className="board-size-selector">
                     <label htmlFor="board-size-input">board size: </label>
-                    <input type="number" id="board-size-input" name="size" min="4" max="12" value={boardSize} onChange={(e) => setBoardSize(parseInt(e.target.value))}/>
+                    <input type="number" id="board-size-input" name="size" min="4" max="10" value={boardSize} onChange={(e) => setBoardSize(parseInt(e.target.value))}/>
                 </div>
                 <br />
                 <button
