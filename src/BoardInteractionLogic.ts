@@ -1,7 +1,5 @@
 import { cellType, boardType, playerStatusType} from "./types"
-import _ from "lodash";
-import rfdc from 'rfdc';
-const clone = rfdc();
+import _ from "lodash"
 import { produce } from "immer";
 
 

@@ -1,5 +1,5 @@
-import { getInvalidCells, autoInvalidateOneCell, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic";
-import { boardType, playerStatusType, cellType, cellGroupType } from "./types";
+import { getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic";
+import { boardType, cellType, cellGroupType } from "./types";
 import rfdc from "rfdc";
 const clone = rfdc();
 import _ from "lodash";
@@ -21,8 +21,8 @@ const areTwoCellsMutuallyExclusive = (cell1: cellType, cell2: cellType) => {
  */
 const validateSolution = (board: boardType): boolean => {
     const stars: cellType[] = []
-    for (let [rowIndex, row] of board.entries()) {
-        for (let [columnIndex, cell] of row.entries()) {
+    for (let row of board) {
+        for (let cell of row) {
             if (cell.playerStatus === "star") {
                 stars.push(cell);
             }

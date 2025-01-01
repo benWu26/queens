@@ -3,15 +3,13 @@ import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
 
-import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, event, resetBoardState}  from "./BoardInteractionLogic";
+import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, resetBoardState}  from "./BoardInteractionLogic";
 
 import rfdc from "rfdc";
 const clone = rfdc();
 
-import { solvePuzzleRecursively } from "./BoardSolver";
 import {validateSolution} from "./BoardSolver"
 import Stopwatch from "./Stopwatch";
-import { borderType } from "./types";
 
 
 function Board(props: boardPropType) {
@@ -21,8 +19,8 @@ function Board(props: boardPropType) {
     const [didBoardChange, setDidBoardChange] = useState(false);
 
     useEffect(() => {
-        setBoard(b => clone(props.board))
-        setDidBoardChange(d => true);
+        setBoard(clone(props.board))
+        setDidBoardChange(true);
     }, [props.board])
 
     useEffect(() => {

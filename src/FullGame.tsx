@@ -1,4 +1,4 @@
-import {StrictMode, useState, useEffect, useCallback } from 'react'
+import {useState, useEffect, useCallback } from 'react'
 import Board from './Board.tsx'
 import { boardType } from './types.ts'
 import {generateValidBoardRuleBased} from './BoardGenerator.ts'
@@ -11,8 +11,8 @@ function FullGame() {
     const [autoPlace, setAutoPlace] = useState(false);
 
     const generateBoard = useCallback(() => { 
-        setLoading(l => true); 
-        setBoard(b => null);  
+        setLoading(true); 
+        setBoard(null);  
 
         setTimeout(() => {
             const newBoard = generateValidBoardRuleBased(boardSize); // Synchronous or async function
@@ -36,7 +36,7 @@ function FullGame() {
             <div className='generate-puzzles'>
                 <div className="board-size-selector">
                     <label htmlFor="board-size-input">board size: </label>
-                    <input type="number" id="board-size-input" name="size" min="4" max="12" value={boardSize} onChange={(e) => setBoardSize(s => parseInt(e.target.value))}/>
+                    <input type="number" id="board-size-input" name="size" min="4" max="12" value={boardSize} onChange={(e) => setBoardSize(parseInt(e.target.value))}/>
                 </div>
                 <br />
                 <button

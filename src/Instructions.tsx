@@ -6,7 +6,10 @@ function Instructions() {
         <div className="instructions">
             <img src={invertedCrown} alt="" className="logo" />
             <p>
-                No two queens can be in the same row, column, of the same color, or touch diagonally.
+                Exactly one queen must be placed in each row, each column, and each color.
+            </p>
+            <p>
+                No two queens can touch, even diagonally.
             </p>
             <p>
                 Click a cell once to place a dot, indicating that a queen cannot be placed there.
