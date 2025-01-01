@@ -34,7 +34,8 @@ type cellPropType = {
 type boardType = cellType[][];
 
 type boardPropType = {
-    board: boardType
+    board: boardType,
+    autoPlace: boolean,
 }
 
 type borderType = {
@@ -65,6 +66,7 @@ type boardGroupsType = {
     rows: cellGroupType[];
     columns: cellGroupType[];
     colorGroups: cellGroupType[];
+    
 };
 
 // ---------------STOPWATCH------------------------

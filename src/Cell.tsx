@@ -1,5 +1,5 @@
 import { cellPropType } from './types';
-import React, { memo, useState } from 'react';
+import React, { memo} from 'react';
 import dot from './assets/dot.svg';
 import crown from './assets/crown.svg';
 import error from './assets/error.svg';

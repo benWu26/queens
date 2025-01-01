@@ -3,15 +3,13 @@ import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
 
-import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, event, resetBoardState}  from "./BoardInteractionLogic";
+import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, resetBoardState}  from "./BoardInteractionLogic";
 
 import rfdc from "rfdc";
 const clone = rfdc();
 
-import { solvePuzzleRecursively } from "./BoardSolver";
 import {validateSolution} from "./BoardSolver"
 import Stopwatch from "./Stopwatch";
-import { borderType } from "./types";
 
 
 function Board(props: boardPropType) {
@@ -21,8 +19,8 @@ function Board(props: boardPropType) {
     const [didBoardChange, setDidBoardChange] = useState(false);
 
     useEffect(() => {
-        setBoard(b => clone(props.board))
-        setDidBoardChange(d => true);
+        setBoard(clone(props.board))
+        setDidBoardChange(true);
     }, [props.board])
 
     useEffect(() => {
@@ -81,8 +79,8 @@ function Board(props: boardPropType) {
 
     // updates the board when a cell is clicked
     const onCellClick = useCallback((rowIndex: number, columnIndex: number): void => {
-        setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b));
-    }, [])
+        setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b, props.autoPlace));
+    }, [props.autoPlace])
 
     // when the mouse is dragged over a cell, invalidates the cell if the mouse is pressed
     const onDrag = useCallback((rowIndex: number, columnIndex: number): void => {

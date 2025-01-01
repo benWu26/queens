@@ -1,6 +1,6 @@
 import { cellType, boardType, nodeLabelType} from "./types"
 import { solvePuzzleRecursively, solvePuzzleRuleBased } from "./BoardSolver";
-import _, { sample } from "lodash";
+import _ from "lodash";
 import { Graph, json, Edge } from "graphlib";
 import rfdc from "rfdc";
 const clone = rfdc();
