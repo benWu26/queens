@@ -20,4 +20,4 @@ Hi everyone! This is an open-source clone of Linkedin's Queens game. My collabor
 ## UPCOMING GOALS
 - Refine the user experience for mobile devices
 - Generate puzzles server-side instead of client-side
-- Add a timer and leaderboard
+- Add accounts, leaderboards, custom color schemes
