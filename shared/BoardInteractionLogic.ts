@@ -253,7 +253,7 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 // RESET STATE
 
 const resetBoardState = (board: boardType) => {
-    return produce(board, draftBoard => {
+    return produce(board, (draftBoard) => {
         for (let row of draftBoard) {
             for (let cell of row) {
                 cell.playerStatus = "valid";

@@ -1,5 +1,5 @@
 import {useState, useEffect, useRef} from 'react';
-import { stopWatchPropTypes } from './types';
+import { stopWatchPropTypes } from '../../shared/types';
 
 function Stopwatch (props: stopWatchPropTypes) {
     const [elapsedTime, setElapsedTime] = useState(0);

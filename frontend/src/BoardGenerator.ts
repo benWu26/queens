@@ -1,4 +1,4 @@
-import { cellType, boardType, nodeLabelType} from "./types"
+import { cellType, boardType, nodeLabelType} from "../../shared/types"
 import { solvePuzzleRecursively, solvePuzzleRuleBased } from "./BoardSolver";
 import _ from "lodash";
 import { Graph, json, Edge } from "graphlib";

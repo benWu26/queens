@@ -1,9 +1,9 @@
 import { useCallback, useState, useRef, useMemo, useEffect } from "react";
 import Cell from "./Cell";
-import {boardType, boardPropType} from "./types"
+import {boardType, boardPropType} from "../../shared/types"
 import _ from "lodash";
 
-import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, resetBoardState}  from "./BoardInteractionLogic";
+import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, resetBoardState}  from "../../shared/BoardInteractionLogic";
 
 import rfdc from "rfdc";
 const clone = rfdc();

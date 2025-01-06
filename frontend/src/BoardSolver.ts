@@ -1,9 +1,9 @@
-import { getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic";
-import { boardType, cellType, cellGroupType } from "./types";
+import { getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause } from "../../shared/BoardInteractionLogic";
+import { boardType, cellType, cellGroupType } from "../../shared/types";
 import rfdc from "rfdc";
 const clone = rfdc();
 import _ from "lodash";
-import {cellChangeType, ruleFunctionType, boardGroupsType} from "./types"
+import {cellChangeType, ruleFunctionType, boardGroupsType} from "../../shared/types"
 
 // --------------------------- SOLUTION VALIDATION ------------------------------
 
