@@ -1,0 +1,1 @@
+{"root":["./server.ts","./controllers/boardgenerator.ts","./controllers/boardsolver.ts","./routes/generate.ts"],"errors":true,"version":"5.7.2"}

@@ -1,20 +1,18 @@
 {
   "name": "shared",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
+    "immer": "^10.1.1",
+    "lodash": "^4.17.21",
     "shared": "file:"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.14",
-    "immer": "^10.1.1",
-    "lodash": "^4.17.21"
+    "@types/lodash": "^4.14.170",
+    "typescript": "^4.2.4"
   }
 }
