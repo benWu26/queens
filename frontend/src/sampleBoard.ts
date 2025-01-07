@@ -1,4 +1,4 @@
-import { boardType, cellType } from "../../shared/types"
+import { boardType, cellType } from "shared"
 
 // SAMPLE MAP + BOARD
 // maps out the color of each cell on the board

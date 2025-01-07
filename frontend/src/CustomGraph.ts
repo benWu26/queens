@@ -1,5 +1,5 @@
 import { Graph } from "graphlib";
-import { nodeLabelType } from "../../shared/types";
+import { nodeLabelType } from "shared/src/types";
 
 // Extend the Graph class to enforce NodeLabelType for node labels
 class CustomGraph extends Graph {

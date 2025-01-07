@@ -1,10 +1,22 @@
 {
   "name": "shared",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "exports": {
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js",
+    "types": "./dist/types/index.d.ts"
+  },
   "scripts": {
-    "build": "tsc"
+    "clean": "rm -rf dist",
+    "build:cjs": "tsc",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "npm run build:cjs && npm run build:esm"
   },
   "dependencies": {
     "immer": "^10.1.1",

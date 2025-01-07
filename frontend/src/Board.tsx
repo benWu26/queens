@@ -1,14 +1,14 @@
 import { useCallback, useState, useRef, useMemo, useEffect } from "react";
 import Cell from "./Cell";
-import {boardType, boardPropType} from "../../shared/types"
+import {boardType, boardPropType} from "shared"
 import _ from "lodash";
 
-import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, addGroupToStack, resetBoardState}  from "../../shared/BoardInteractionLogic";
+import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, resetBoardState, addGroupToStack}  from "shared";
 
 import rfdc from "rfdc";
 const clone = rfdc();
 
-import {validateSolution} from "./BoardSolver"
+import {validateSolution} from "shared"
 import Stopwatch from "./Stopwatch";
 
 

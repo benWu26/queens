@@ -1,7 +1,6 @@
 import {useState, useEffect, useCallback } from 'react'
 import Board from './Board.tsx'
-import { boardType } from '../../shared/types.ts'
-import {generateValidBoardRuleBased} from './BoardGenerator.ts'
+import { boardType } from 'shared'
 import "./index.css"
 
 function FullGame() {
@@ -10,18 +9,23 @@ function FullGame() {
     const [boardSize, setBoardSize] = useState(8);
     const [autoPlace, setAutoPlace] = useState(false);
 
-    const generateBoard = useCallback(() => { 
+    const getBoard = useCallback(() => { 
         setLoading(true); 
         setBoard(null);  
 
         setTimeout(() => {
-            const newBoard = generateValidBoardRuleBased(boardSize); // Synchronous or async function
-            setBoard(newBoard); // Update the board with the generated one
-            setLoading(false); // Turn off loading
+            fetch(`/api/generate?size=${boardSize}`).then(
+                response => response.json()
+            ).then(
+                (board: boardType) => {
+                    setBoard(board);
+                    setLoading(false);
+                }
+            )
         }, 0);
     }, [boardSize]);
 
-    useEffect(() => { generateBoard() }, [])
+    useEffect(() => { getBoard() }, [])
 
     return (
         <div className="full-game">
@@ -40,7 +44,7 @@ function FullGame() {
                 </div>
                 <br />
                 <button
-                onClick={generateBoard}>
+                onClick={getBoard}>
                 generate new board
             </button>
             <br />
