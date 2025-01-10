@@ -4,9 +4,13 @@ import { stopWatchPropTypes } from 'shared';
 function Stopwatch (props: stopWatchPropTypes) {
     const [elapsedTime, setElapsedTime] = useState(0);
 
+    // the ID of the current interval used to update the time
     const intervalIdRef = useRef(0);
+
+    // when the stopwatch started
     const startTimeRef = useRef(Date.now());
 
+    // updates the time every 100ms
     useEffect(() => {
         if (props.isRunning) {
             intervalIdRef.current = setInterval(() => {
@@ -20,12 +24,14 @@ function Stopwatch (props: stopWatchPropTypes) {
         
     }, [props.isRunning])
 
+    // resets time to 0
     useEffect(() => {
         if (props.reset) {
             startTimeRef.current = Date.now();
         }
     }, [props.reset])
 
+    // formats the elapsed time correctly
     function formatTime() {
         const minutes = Math.floor(elapsedTime / (1000 * 60));
         const seconds = Math.floor(elapsedTime / 1000) % 60;
@@ -35,6 +41,7 @@ function Stopwatch (props: stopWatchPropTypes) {
 
     }
 
+    // pads a number with a zero if it's less than 10
     const padZeros = (n: number) => {
         return (n < 10 ? "0" + n : n)
     }

@@ -1,4 +1,4 @@
-import { cellPropType } from 'shared/src/types';
+import { cellPropType } from 'shared';
 import React, { memo} from 'react';
 import dot from './assets/dot.svg';
 import crown from './assets/crown.svg';

@@ -30,6 +30,7 @@ function FullGame() {
 
     return (
         <div className="full-game">
+            {/* displays the board if it's loaded, otherwise, displays a loading message */}
             <div id="placeholder">
                 {loading ? <div className='loading-message'>loading...</div> : <>
                 <Board board={board!} autoPlace={autoPlace}></Board>
@@ -37,19 +38,24 @@ function FullGame() {
                 </>}
                 
             </div>
+
+            {/* if the board is loaded, display these components as well. */}
             {loading ? null : 
             <div className='generate-puzzles'>
+                {/* select the desired board size */}
                 <div className="board-size-selector">
                     <label htmlFor="board-size-input">board size: </label>
                     <input type="number" id="board-size-input" name="size" min="4" max="10" value={boardSize} onChange={(e) => setBoardSize(parseInt(e.target.value))}/>
                 </div>
                 <br />
+                {/* get a new board */}
                 <button
-                onClick={getBoard}>
-                generate new board
-            </button>
-            <br />
-            <label className='x-switch'>
+                    onClick={getBoard}>
+                    generate new board
+                </button>
+                <br />
+                {/* toggle dot auto placement */}
+                <label className='x-switch'>
                     <input type="checkbox" checked={autoPlace} onChange={(e) => setAutoPlace(e.target.checked)}/>
                     auto place dots
                 </label>

@@ -16,22 +16,32 @@ function Board(props: boardPropType) {
     
     // using board as a state variable
     const [board, setBoard] = useState(clone(props.board));
+
+    // used as a reset signal for the stopwatch
     const [didBoardChange, setDidBoardChange] = useState(false);
 
+    // ref variable for detecting if mouse is pressed or not
+    const mouseDownRef = useRef(false);
+
+    // when we click on a cell, both mouseDown and mouseEnter events are triggered. To prevent both
+    // callbacks from being called, we set a 50ms delay using suppressMouseRef.
+    const suppressMouseRef = useRef(false);
+
+    // when the board passed in from props changes, we want to set the board and reset the stopwatch
     useEffect(() => {
         setBoard(clone(props.board))
         setDidBoardChange(true);
     }, [props.board])
 
+    // prevents stopwatch from perpetually resetting
     useEffect(() => {
         if (didBoardChange) {
             setDidBoardChange(false)
         }
     }, [didBoardChange])
 
-
-
-
+    
+    // determines which cell borders separate two different colors
     const borders = useMemo(() => {
         return props.board.map((row, rowIndex) => row.map((cell, columnIndex) => {
             console.log("border recalculated");
@@ -72,10 +82,8 @@ function Board(props: boardPropType) {
         }));
     }, [props.board]);
 
-    // ref variable for detecting if mouse is pressed or not
-    const mouseDownRef = useRef(false);
 
-    const suppressMouseRef = useRef(false);
+    // --------------------CALLBACKS PASSED INTO EACH CELL-------------------------------
 
     // updates the board when a cell is clicked
     const onCellClick = useCallback((rowIndex: number, columnIndex: number): void => {
@@ -83,7 +91,7 @@ function Board(props: boardPropType) {
     }, [props.autoPlace])
 
     // when the mouse is dragged over a cell, invalidates the cell if the mouse is pressed
-    const onDrag = useCallback((rowIndex: number, columnIndex: number): void => {
+    const onCellDrag = useCallback((rowIndex: number, columnIndex: number): void => {
         if (mouseDownRef.current && !suppressMouseRef.current) {
             setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
 
@@ -91,65 +99,66 @@ function Board(props: boardPropType) {
     }, []);
 
 
+    // -------------------CALLBACKS FOR BOARD-LEVEL EVENTS-------------------------------
+    const onBoardMouseDown = () => {
+        suppressMouseRef.current = true;
+        mouseDownRef.current = true;
+        setTimeout(() => {
+            suppressMouseRef.current = false;
+        }, 50);
 
-    // when the mouse moves out of the board, we want to set mouseDownRef to false.
-    // when the mouse re-enters the board, we want to see 
-
-
-
-    //BEN FUNCTION FOR UNDO
-    const onButtonClick = (): void => {
-        setBoard((b): boardType => undoEvent(b));
+        //create a new event group/empties
+        emptyEventGroup();
     }
 
-    const onResetButtonClick = useCallback(
-        () => {setBoard((b): boardType => resetBoardState(b));}, []
+    const onBoardMouseUp = () => {
+        mouseDownRef.current = false;
+        addGroupToStack(); //adds to the stack;
+    }
+
+    const onBoardMouseEnter = (e: React.MouseEvent) => {
+        if (e.buttons & (1)) {
+            mouseDownRef.current = true;
+
+            // dispatch a mouseOver event to the cell being pointed at
+            const selectedCell = document.elementFromPoint(e.clientX, e.clientY);
+            if (selectedCell instanceof HTMLElement) {
+                const event = new MouseEvent('mouseover', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: e.clientX,
+                    clientY: e.clientY
+                });
+                selectedCell.dispatchEvent(event);
+            }
+        }
+    }
+
+    // -------------------OTHER BUTTONS-----------------------------------
+    //BEN FUNCTION FOR UNDO
+    const onUndoButtonClick = useCallback(
+        (): void => {setBoard((b): boardType => undoEvent(b))}, []
     )
 
+    // called when clicking the reset button
+    const onResetButtonClick = useCallback(
+        () => {setBoard((b): boardType => resetBoardState(b))}, []
+    )
 
+    // ---------------------COMPONENT TSX--------------------------------
     return (
         // style board to be an nxn grid
         <div className="board-container">
             <div className="board" style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties} 
-            onMouseDown={() => {
-                suppressMouseRef.current = true;
-                mouseDownRef.current = true;
-                setTimeout(() => {
-                    suppressMouseRef.current = false;
-                }, 50);
+                onMouseDown={onBoardMouseDown} 
 
-                //create a new event group/empties
-                emptyEventGroup();
-                                              
+                onMouseUp={onBoardMouseUp}
 
-            }} 
+                onMouseLeave={() => {mouseDownRef.current = false}}
 
-            onMouseUp={() => {
-                mouseDownRef.current = false;
-                  addGroupToStack(); //adds to the stack;
-                }
-            }
-            onMouseLeave={() => {mouseDownRef.current = false}}
-
-            onMouseEnter={(e) => {
-                // if the left mouse button (corresponding to the 0th position of the binary string) is pressed:
-                if (e.buttons & (1)) {
-                    mouseDownRef.current = true;
-
-                    // dispatch a mouseOver event to the cell being pointed at
-                    const selectedCell = document.elementFromPoint(e.clientX, e.clientY);
-                    if (selectedCell instanceof HTMLElement) {
-                        const event = new MouseEvent('mouseover', {
-                            view: window,
-                            bubbles: true,
-                            cancelable: true,
-                            clientX: e.clientX,
-                            clientY: e.clientY
-                        });
-                        selectedCell.dispatchEvent(event);
-                    }
-                }                 
-            }}>
+                onMouseEnter={(e) => onBoardMouseEnter(e)}
+            >
                 {
                     // 2 layers of mapping
                     board.map((row, rowIndex) => row.map((cell, columnIndex) => {
@@ -162,7 +171,7 @@ function Board(props: boardPropType) {
                             leftBorder = {cellBorder.leftBorder}
                             topBorder = {cellBorder.topBorder}
                             updatePlayerStatusClick={() => onCellClick(rowIndex, columnIndex)}
-                            updatePlayerStatusDrag={() => onDrag(rowIndex, columnIndex)}
+                            updatePlayerStatusDrag={() => onCellDrag(rowIndex, columnIndex)}
                             ></Cell>
                             
                     }))
@@ -172,13 +181,16 @@ function Board(props: boardPropType) {
             <p>{validateSolution(board) ? "Congratulations!" : null}</p>
 
             {/* The Undo button */}
-            <button onClick = {onButtonClick}> 
+            <button onClick = {onUndoButtonClick}> 
                 UNDO
             </button>
 
+            {/* reset button */}
             <button onClick={onResetButtonClick}>
                 RESET
             </button>
+
+            {/* Used for timing how long the player takes to solve */}
             <Stopwatch isRunning={!validateSolution(board)} reset={didBoardChange}></Stopwatch>
         </div>
     )
