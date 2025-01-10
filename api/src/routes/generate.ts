@@ -2,28 +2,20 @@ import express, {Request, Response, Router} from "express";
 import * as dotenv from "dotenv"
 const router: Router = express.Router();
 import { collections } from "../services/database.service";
+import { validateBoardSize } from "../middleware/validateBoardSize";
 
 dotenv.config();
 
 console.log(process.env.DB_CONNECTION_STRING);
 
-import { boardType, generateValidBoardRuleBased } from "shared";
+import {generateValidBoardRuleBased } from "shared";
 
-router.use(express.json())
-
-router.get('/', async (req: Request, res: Response) => {
+// returns a random board of size n from the database.
+router.get('/', validateBoardSize, async (req: Request, res: Response) => {
     const size = req.query?.size as string | undefined;
-    if (!size) {
-        return res.status(400).json({"message": "please specify the board size."});
-    }
-
-    const boardSize = parseInt(size as string);
-    if (boardSize < 4 || boardSize > 10) {
-        return res.status(400).json({"message": "board size must be between 4 and 10"});
-    }
 
     const pipeline = [
-        {$match: {size: boardSize}},
+        {$match: {size: parseInt(size!)}},
         {$sample: {size: 1}}
     ]
 
@@ -37,16 +29,10 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/', async (req: Request, res: Response) => {
+// generates a board and adds it to the database.
+router.post('/', validateBoardSize, async (req: Request, res: Response) => {
     const size = req.query?.size as string | undefined;
-    if (!size) {
-        return res.status(400).json({"message": "please specify the board size."});
-    }
-
-    const boardSize = parseInt(size as string);
-    if (boardSize < 4 || boardSize > 10) {
-        return res.status(400).json({"message": "board size must be between 4 and 10"});
-    }
+    const boardSize = parseInt(size!);
 
     const board = generateValidBoardRuleBased(boardSize);
     collections.boards?.insertOne({size: boardSize, board: board});

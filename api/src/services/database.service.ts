@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 
 export const collections: {boards?: mongoDB.Collection} = {}
 
+// connects to the MongoDB database using the connection string.
 export async function connectToDatabase() {
     dotenv.config();
 
