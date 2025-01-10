@@ -198,6 +198,21 @@ const constructBoardFromColorMap = (colorMap: number[][]): boardType => {
 }
 
 /**
+ * Takes a board and constructs a color map from it. The color map is a 2D array of numbers, where each number is the index of the node in the graph that contains the cell's index in its cellList.
+ * @param {boardType} board the board to construct the color map from
+ * @returns {number[][]} the constructed color map
+ */
+const constructColorMapFromBoard = (board: boardType): number[][] => {
+    // Create the color map by mapping the board to cells
+    const colorMap: number[][] = board.map((row, ridx) => row.map((cell, cidx) => {
+        // Each cell has a color, player status, real status, and causes
+        return cell.color;
+    }))
+
+    return colorMap;
+}
+
+/**
  * Generates a new board of a given size by first creating a graph with the given number of nodes,
  * then coloring the graph, and finally constructing a board from the colored graph.
  * @param {number} size the size of the board to generate
@@ -223,7 +238,7 @@ const generateOneBoard = (size: number): boardType => {
  * @param {number} size the size of the board to generate
  * @returns {boardType} the generated board
  */
-const generateValidBoardRuleBased = (size: number): boardType => {
+const generateValidBoardRuleBased = (size: number): number[][] => {
     // Keep track of the number of iterations it takes to find a valid board
     let num_iterations = 0;
     // Keep track of the average time it takes to generate a board
@@ -258,7 +273,7 @@ const generateValidBoardRuleBased = (size: number): boardType => {
             console.log(`   average puzzle gen time: ${avg_gen_time / num_iterations} ms`);
             console.log(`   average puzzle solve time: ${avg_solve_time / num_iterations} ms`);
 
-            return puzzleBoard;
+            return constructColorMapFromBoard(puzzleBoard);
         }
     }
 }
@@ -302,4 +317,5 @@ const testGenerationSpeed = (size: number, k: number) => {
     console.log(`average time per iteration: ${totalGenerateTime/k} ms`);
 }
 
-export {generateValidBoardRuleBased, testGenerationSpeed, generateOneBoard, generateValidBoardRecursive}
+export {generateValidBoardRuleBased, constructBoardFromColorMap, testGenerationSpeed, generateOneBoard,
+     generateValidBoardRecursive}

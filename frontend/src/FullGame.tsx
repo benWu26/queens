@@ -1,6 +1,6 @@
 import {useState, useEffect, useCallback } from 'react'
 import Board from './Board.tsx'
-import { boardType } from 'shared'
+import { boardType, constructBoardFromColorMap } from 'shared'
 import "./index.css"
 
 function FullGame() {
@@ -17,8 +17,9 @@ function FullGame() {
             fetch(`/api/generate?size=${boardSize}`).then(
                 response => response.json()
             ).then(
-                (board: boardType) => {
-                    setBoard(board);
+                (colorMap: number[][]) => {
+                    const newBoard = constructBoardFromColorMap(colorMap);
+                    setBoard(newBoard);
                     setLoading(false);
                 }
             )

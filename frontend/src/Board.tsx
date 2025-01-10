@@ -3,7 +3,7 @@ import Cell from "./Cell";
 import {boardType, boardPropType} from "shared"
 import _ from "lodash";
 
-import { updateBoard, invalidateCellOnDrag, undoEvent,  emptyEventGroup, resetBoardState, addGroupToStack}  from "shared";
+import { updateBoard, invalidateCellOnDrag, undoEvent, emptyEventGroup, resetBoardState, addGroupToStack}  from "shared";
 
 import rfdc from "rfdc";
 const clone = rfdc();
