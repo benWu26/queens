@@ -1,7 +1,7 @@
 import express, {Request, Response, Router} from "express";
 const router: Router = express.Router();
 
-import { generateValidBoardRuleBased } from "../controllers/BoardGenerator";
+import { generateValidBoardRuleBased } from "shared";
 
 router.get('/', (req: Request, res: Response) => {
     const size = req.query?.size as string | undefined;

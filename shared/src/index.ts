@@ -1,3 +1,4 @@
 export * from './BoardInteractionLogic';
 export * from './types';
-export * from './validateSolution'
+export * from './BoardGenerator';
+export * from './BoardSolver';
