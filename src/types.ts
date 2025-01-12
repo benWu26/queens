@@ -14,6 +14,7 @@ type cellType = {
     causes: causesType,
     row: number, 
     column: number
+
 }
 
 // props that need to be passed in when creating a Cell component
@@ -26,7 +27,10 @@ type cellPropType = {
     bottomBorder: boolean,
     leftBorder: boolean
     updatePlayerStatusClick: () => void,
-    updatePlayerStatusDrag: () => void
+    updatePlayerStatusDrag: () => void,
+
+    error: boolean //added error boolean
+
 }
 
 // ------------------------------BOARD------------------------------------
@@ -72,7 +76,26 @@ type stopWatchPropTypes = {
     isRunning: boolean
 }
 
+
+
+// ---------------ERROR ------------------------
+// // type for cells
+// type errorType = { //just need coordinate
+//     row: number, 
+//     column: number
+// }
+
+// // props that need to be passed in when creating a error component
+// type errorPropType = {
+//     topBorder: boolean,
+//     rightBorder: boolean,
+//     bottomBorder: boolean,
+//     leftBorder: boolean
+//     updatePlayerStatusClick: () => void,
+//     updatePlayerStatusDrag: () => void
+// }
+
 export type {stopWatchPropTypes}
 
 export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType, 
-    cellGroupType, cellChangeType, ruleFunctionType, boardGroupsType };
+    cellGroupType, cellChangeType, ruleFunctionType, boardGroupsType, };

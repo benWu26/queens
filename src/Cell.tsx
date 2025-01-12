@@ -1,4 +1,4 @@
-import { cellPropType } from './types';
+import { cellPropType, } from './types';
 import React, { memo, useState } from 'react';
 import dot from './assets/dot.svg';
 import crown from './assets/crown.svg';
@@ -11,6 +11,11 @@ const symbols = {
     "star": <img className='symbol' src={crown} alt="" />,
 
     //added cross
+    "error": <img className='symbol' src={error} alt="" />
+}
+
+// what should be displayed in the error
+const errorImage = {
     "error": <img className='symbol' src={error} alt="" />
 }
 
@@ -45,6 +50,9 @@ function Cell(props: cellPropType) {
     style.borderBottom = props.bottomBorder ? "3px solid black" : "1px solid black"
     style.borderTop = props.topBorder ? "3px solid black" : "1px solid black"
 
+    //created a boolean for if theres an error or not to trigger overlay
+    const ifError = props.error;  
+
     return (
         <div className="cell" style={style} 
         onMouseDown={
@@ -63,6 +71,7 @@ function Cell(props: cellPropType) {
         </div>
     )
 }
+
 
 export default memo(Cell, (prevProps, nextProps) => {
     return (

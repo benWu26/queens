@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useMemo } from "react";
+import { useCallback, useState, useRef, useMemo, useEffect } from "react";
 import Cell from "./Cell";
 import {boardType, boardPropType} from "./types"
 import _ from "lodash";
@@ -18,6 +18,9 @@ function Board(props: boardPropType) {
     
     // using board as a state variable
     const [board, setBoard] = useState(clone(props.board));
+
+    //set variable to pop win screen
+    const [isWon, setIsWon] = useState<boolean>(false);
 
     const borders = useMemo(() => {
         return props.board.map((row, rowIndex) => row.map((cell, columnIndex) => {
@@ -93,6 +96,13 @@ function Board(props: boardPropType) {
         () => {setBoard((b): boardType => resetBoardState(b));}, []
     )
 
+    // Add a useEffect to handle the win state
+    useEffect(() => {
+        if (validateSolution(board) && !isWon) {
+        setIsWon(true);
+        alert("You win!");
+        }
+    }, [board, isWon]); // Only run when `board` or `isWon` changes
 
     return (
         // style board to be an nxn grid
@@ -150,13 +160,15 @@ function Board(props: boardPropType) {
                             topBorder = {cellBorder.topBorder}
                             updatePlayerStatusClick={() => onCellClick(rowIndex, columnIndex)}
                             updatePlayerStatusDrag={() => onDrag(rowIndex, columnIndex)}
+ 
+                            ifError = {} //add if Error function
                             ></Cell>
                             
                     }))
                 }
             </div>
 
-            <p>{validateSolution(board) ? "complete" : "incomplete"}</p>
+            {/* <p>{validateSolution(board) ? "complete" : "incomplete"}</p> */}
 
             {/* The Undo button */}
             <button onClick = {onButtonClick}> 

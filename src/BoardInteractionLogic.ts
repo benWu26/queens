@@ -71,7 +71,7 @@ const autoInvalidateOneCell = (rowIndex: number, columnIndex: number, cell: cell
         cell.playerStatus = "invalid";
         cell.causes.push([rowIndex, columnIndex]);
     } 
-    else{
+    else{ //if equal to a star, then 
         cell.playerStatus = "error";
         // cell.causes.push([rowIndex, columnIndex]);
     }
@@ -232,8 +232,8 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
                 //reads the undo state and turns it into what cell used to (along with the changes)
                 if(undoState === "invalid"){ 
                     reverseErrors(rowIndex, columnIndex, draftBoard); //create an event for undoing?
-                    cell.causes.push("human");
                     removeInvalidationCause(rowIndex, columnIndex, draftBoard);
+                    cell.causes.push("human");
                 }
                 else if (undoState === "star") { 
                     cell.causes = [];
@@ -285,6 +285,21 @@ const reverseErrors = (rowIndex: number, columnIndex: number, board: boardType) 
             if(cell.playerStatus == "error")
                 cell.playerStatus = "star";
         })
+}
+
+// toggle visibility
+const toggleOverlay = (rowIndex: number, columnIndex: number, board: boardType) => {
+    const currentCell = board[rowIndex][columnIndex]
+    
+    //get the corresponding overlay
+        //i need to figure out how to connect the overlay to the cell
+            //set the overlay visibility to on
+                //possible issue: i need to create an invisible overlay for each cell?
+
+}
+
+const checkforError = (rowIndex: number, columnIndex: number, board: boardType) => {
+    
 }
 
 export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, emptyEventGroup, addGroupToStack, resetBoardState}
