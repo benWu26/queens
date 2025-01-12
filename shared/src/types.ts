@@ -60,7 +60,12 @@ type cellGroupType = {
 }
 
 type cellChangeType = [number, number, playerStatusType];
-type ruleFunctionType = (board: boardType, groups: boardGroupsType) => cellChangeType[] | false;
+type ruleReturnType = {
+    changes: cellChangeType[],
+    difficulty: number
+}
+
+type ruleFunctionType = (board: boardType, groups: boardGroupsType) => ruleReturnType | false;
 
 type boardGroupsType = {
     rows: cellGroupType[];
@@ -68,6 +73,8 @@ type boardGroupsType = {
     colorGroups: cellGroupType[];
     
 };
+
+export {cellGroupType, cellChangeType, ruleReturnType, ruleFunctionType, boardGroupsType}
 
 // ---------------STOPWATCH------------------------
 type stopWatchPropTypes = {
@@ -77,5 +84,5 @@ type stopWatchPropTypes = {
 
 export type {stopWatchPropTypes}
 
-export type { playerStatusType, realStatusType, cellType, cellPropType, boardType, boardPropType, nodeLabelType, 
-    cellGroupType, cellChangeType, ruleFunctionType, boardGroupsType };
+export type { playerStatusType, realStatusType, cellType, 
+    cellPropType, boardType, boardPropType, nodeLabelType};

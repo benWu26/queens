@@ -238,7 +238,7 @@ const generateOneBoard = (size: number): boardType => {
  * @param {number} size the size of the board to generate
  * @returns {boardType} the generated board
  */
-const generateValidBoardRuleBased = (size: number): number[][] => {
+const generateValidBoardRuleBased = (size: number): {board: number[][], difficulty: number} => {
     // Keep track of the number of iterations it takes to find a valid board
     let num_iterations = 0;
     // Keep track of the average time it takes to generate a board
@@ -273,7 +273,7 @@ const generateValidBoardRuleBased = (size: number): number[][] => {
             console.log(`   average puzzle gen time: ${avg_gen_time / num_iterations} ms`);
             console.log(`   average puzzle solve time: ${avg_solve_time / num_iterations} ms`);
 
-            return constructColorMapFromBoard(puzzleBoard);
+            return {board: constructColorMapFromBoard(puzzleBoard), difficulty: sols.difficulty};
         }
     }
 }

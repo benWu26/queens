@@ -2,11 +2,13 @@ import {useState, useEffect, useCallback } from 'react'
 import Board from './Board.tsx'
 import { boardType, constructBoardFromColorMap } from 'shared'
 import "./index.css"
+import Slider from "@mui/material/Slider"
 
 function FullGame() {
     const [board, setBoard] = useState<boardType | null>(null);
     const [loading, setLoading] = useState(true);
     const [boardSize, setBoardSize] = useState(8);
+    const [difficulty, setDifficulty] = useState(5);
     const [autoPlace, setAutoPlace] = useState(false);
 
     const getBoard = useCallback(() => { 
@@ -14,7 +16,9 @@ function FullGame() {
         setBoard(null);  
 
         setTimeout(() => {
-            fetch(`/api/generate?size=${boardSize}`).then(
+            const fetchUrl = `/api/generate?size=${boardSize}&percentile=${difficulty/10}`
+            console.log(fetchUrl)
+            fetch(fetchUrl).then(
                 response => response.json()
             ).then(
                 (colorMap: number[][]) => {
@@ -24,7 +28,7 @@ function FullGame() {
                 }
             )
         }, 0);
-    }, [boardSize]);
+    }, [boardSize, difficulty]);
 
     useEffect(() => { getBoard() }, [])
 
@@ -43,11 +47,30 @@ function FullGame() {
             {loading ? null : 
             <div className='generate-puzzles'>
                 {/* select the desired board size */}
-                <div className="board-size-selector">
-                    <label htmlFor="board-size-input">board size: </label>
-                    <input type="number" id="board-size-input" name="size" min="4" max="10" value={boardSize} onChange={(e) => setBoardSize(parseInt(e.target.value))}/>
+                <div className='slider-label'>
+                    board size: {boardSize}
                 </div>
-                <br />
+                <Slider
+                    value={boardSize}
+                    min={4}
+                    max={10}
+                    step={1}
+                    onChange={(e, value) => setBoardSize(value as number)}
+                    valueLabelDisplay="off"
+                    aria-labelledby="board-size-slider"
+                />
+                <div className='slider-label'>
+                    difficulty: {difficulty}
+                </div>
+                <Slider
+                    value={difficulty}
+                    min={0}
+                    max={10}
+                    step={1}
+                    onChange={(e, value) => setDifficulty(value as number)}
+                    valueLabelDisplay="off"
+                    aria-labelledby="difficulty-slider"
+                />
                 {/* get a new board */}
                 <button
                     onClick={getBoard}>
@@ -59,6 +82,7 @@ function FullGame() {
                     <input type="checkbox" checked={autoPlace} onChange={(e) => setAutoPlace(e.target.checked)}/>
                     auto place dots
                 </label>
+
             </div>
             
             }   
@@ -67,8 +91,3 @@ function FullGame() {
 }
 
 export default FullGame
-
-// what I want to do:
-// have the landing page be a quick ruleset/demo
-// the UI for generating puzzles should maybe be in a separate column
-// actually label the size selector
