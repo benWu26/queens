@@ -187,7 +187,6 @@ const constructBoardFromColorMap = (colorMap: number[][]): boardType => {
         return {
             color: c,
             playerStatus: "valid",
-            realStatus: "invalid",
             causes: [],
             row: ridx,
             column: cidx

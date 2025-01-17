@@ -566,7 +566,7 @@ const solvePuzzleRuleBased = (board: boardType) => {
 
     let iterations = 0;
     while (iterations < 100) {
-        const result = solvePuzzleOneIteration(board, groups, rulesWithBranching);
+        const result = solvePuzzleOneIteration(board, groups, rulesWithoutBranching);
 
         if (result === true) {
             return {result, difficulty}
