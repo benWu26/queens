@@ -2,7 +2,6 @@
 
 // status of each individual cell
 type playerStatusType = "valid" | "invalid" | "star" | "error" //added error
-type realStatusType = "invalid" | "star"
 type coordinateType = [number, number]
 type causesType = ("human" | coordinateType)[]
 
@@ -10,7 +9,6 @@ type causesType = ("human" | coordinateType)[]
 type cellType = {
     color: number,
     playerStatus: playerStatusType,
-    realStatus: realStatusType,
     causes: causesType,
     row: number, 
     column: number
@@ -84,5 +82,5 @@ type stopWatchPropTypes = {
 
 export type {stopWatchPropTypes}
 
-export type { playerStatusType, realStatusType, cellType, 
+export type { playerStatusType, cellType, 
     cellPropType, boardType, boardPropType, nodeLabelType};

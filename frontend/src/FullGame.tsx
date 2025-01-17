@@ -74,7 +74,7 @@ function FullGame() {
                 {/* get a new board */}
                 <button
                     onClick={getBoard}>
-                    generate new board
+                    new game
                 </button>
                 <br />
                 {/* toggle dot auto placement */}

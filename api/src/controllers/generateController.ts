@@ -81,7 +81,7 @@ export const getBoard = async (req: Request, res: Response) => {
             difficulty_percentile: {
                 $percentile: {
                     input: "$difficulty",
-                    p: [parseFloat(percentileString!)],
+                    p: [parseFloat(percentileString!) + (Math.random() * 0.1 - 0.05)],
                     method: "approximate"
                 }
             }
