@@ -16,7 +16,7 @@
   "dependencies": {
     "@types/express": "^4.17.15",
     "@types/node": "^22.10.5",
-    "api": "file:"
+    "shared": "file:../shared"
   },
   "devDependencies": {
     "@types/express-serve-static-core": "^5.0.3",

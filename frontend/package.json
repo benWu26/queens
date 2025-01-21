@@ -14,10 +14,10 @@
     "@types/react-router-dom": "^5.3.3",
     "graphlib": "^2.1.8",
     "immer": "^10.1.1",
-    "queens": "file:",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.1.1"
+    "react-router-dom": "^7.1.1",
+    "shared": "file:../shared"
   },
   "devDependencies": {
     "@dagrejs/graphlib": "^2.2.4",
