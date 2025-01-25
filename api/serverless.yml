@@ -1,0 +1,24 @@
+service: queens-aws-lambda
+
+plugins:
+  - serverless-offline
+  - serverless-middleware
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-1
+  stage: ${opt:stage}
+  timeout: 30
+  environment:
+    STAGE: ${self:provider.stage}
+
+functions:
+  # get board
+  GetBoard:
+    middleware:
+      - pre:
+          - validateBoardSize.validateBoardSize2
+
+  # post board
+  PostBoard:
