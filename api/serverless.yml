@@ -16,9 +16,22 @@ provider:
 functions:
   # get board
   GetBoard:
+    events:
+      - http:
+          path: /generate
+          method: get
+    handler: src/controllers/generateController.getBoard
     middleware:
-      - pre:
-          - validateBoardSize.validateBoardSize2
+      - src/middleware/validateBoardSize.validateBoardSize
+      - src/controllers/generateController.getBoard
 
   # post board
   PostBoard:
+    events:
+      - http:
+          path: /generate
+          method: post
+    handler: src/controllers/generateController.postBoard
+    middleware:
+      - src/middleware/validateBoardSize.validateBoardSize
+      - src/controllers/generateController.postBoard

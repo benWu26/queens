@@ -1,7 +1,14 @@
 import {Request, Response} from "express";
-import { collections } from "../services/database.service";
+import { collections, connectToDatabase } from "../services/database.service";
 import { generateValidBoardRuleBased } from "shared";
 import { Binary } from "mongodb";
+
+import type {
+    Context,
+    APIGatewayProxyStructuredResultV2,
+    APIGatewayProxyEventV2,
+    Handler
+} from "aws-lambda"
 
 /**
  * Packs a color map (a 2D array of numbers) into a byte array, where each
@@ -59,20 +66,18 @@ const decodeBytesIntoColorMap = (bytes: number[], size: number): number[][] => {
     return colorMap;
 }
 
-/**
- * GET /board
- * Returns a random board of size n from the database
- * @param {Request} req - request object
- * @param {Response} res - response object
- */
-export const getBoard = async (req: Request, res: Response) => {
-    // get the percentile too
 
-    const sizeString = req.query?.size as string | undefined;
-    const percentileString = req.query?.percentile as string | undefined;
-    const boardSize = parseInt(sizeString!);
 
-    // select random sample (maybe 100)
+
+
+export const getBoard: Handler = async (
+    _event: APIGatewayProxyEventV2,
+    _context: Context
+): Promise<APIGatewayProxyStructuredResultV2> => {
+    await connectToDatabase();
+    const sizeStr = _event.queryStringParameters?.size as string | undefined;
+    const percentileString = _event.queryStringParameters?.percentile as string | undefined;
+    const boardSize = parseInt(sizeStr!);
 
     const getPercentilePipeline = [
         {$match: {size: boardSize}},
@@ -98,30 +103,33 @@ export const getBoard = async (req: Request, res: Response) => {
         {$sample: {size: 1}}
     ]
 
-
-    const boardDocument = (await collections.boards?.aggregate(getPuzzlePipeline).toArray())
+    const boardDocument = (await collections.boards?.aggregate(getPuzzlePipeline).toArray());
 
     if (boardDocument?.length) {
         const boardData = boardDocument[0].board.buffer;
-        res.status(200).json(decodeBytesIntoColorMap(boardData, boardSize));
+        return {
+            statusCode: 200,
+            body: JSON.stringify(decodeBytesIntoColorMap(boardData, boardSize))
+        }
     } else {
-        res.status(404).json({"message": "board not found"});
+        return {
+            statusCode: 404,
+            body: "board not found"
+        }
     }
 }
 
-/**
- * POST /board
- * Generates a board of size n, adds it to the database, and returns a success message
- * @param {Request} req - request object
- * @param {Response} res - response object
- */
-export const postBoard = async (req: Request, res: Response) => {
-    const sizeString = req.query?.size as string | undefined;
+export const postBoard: Handler = async (_event: APIGatewayProxyEventV2, _context: Context) => {
+    await connectToDatabase();
+    const sizeString = _event.queryStringParameters?.size as string | undefined;
     const boardSize = parseInt(sizeString!);
 
     const board = generateValidBoardRuleBased(boardSize);
     
     collections.boards?.insertOne({size: boardSize, difficulty: board.difficulty, board: new Binary(packColorMapToBytes(board.board))});
 
-    res.status(200).json({message: "board successfully created"})
+    return {
+        statusCode: 200,
+        body: "board successfully created"
+    }
 }
