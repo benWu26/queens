@@ -22,6 +22,7 @@ Hi everyone! This is an open-source clone of Linkedin's Queens game. My collabor
 - Added difficulty calculation to puzzles, allowing for users to request easier/harder puzzles
 
 ## UPCOMING GOALS
+- Stop being lazy and actually make a decent frontend :D
 - Refine the user experience for mobile devices
 - Write cron job for automatically populating puzzle database at night
 - Add accounts, leaderboards, custom color schemes
