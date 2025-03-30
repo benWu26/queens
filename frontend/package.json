@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
+    "dotenv": "^16.4.7",
     "graphlib": "^2.1.8",
     "immer": "^10.1.1",
     "react": "^18.3.1",
@@ -28,6 +29,7 @@
     "@mui/material": "^6.3.1",
     "@types/graphlib": "^2.1.12",
     "@types/lodash": "^4.17.13",
+    "@types/node": "^22.10.10",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react-swc": "^3.5.0",

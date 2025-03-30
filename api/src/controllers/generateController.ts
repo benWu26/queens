@@ -55,8 +55,6 @@ const decodeBytesIntoColorMap = (bytes: number[], size: number): number[][] => {
         flatColors.pop();
     }
 
-    console.log(flatColors);
-
     const colorMap: number[][] = [];
     
     while (flatColors.length) {
@@ -65,10 +63,6 @@ const decodeBytesIntoColorMap = (bytes: number[], size: number): number[][] => {
 
     return colorMap;
 }
-
-
-
-
 
 export const getBoard: Handler = async (
     _event: APIGatewayProxyEventV2,
@@ -80,18 +74,25 @@ export const getBoard: Handler = async (
     const boardSize = parseInt(sizeStr!);
 
     const getPercentilePipeline = [
-        {$match: {size: boardSize}},
-        {$group: {
-            _id: null,
-            difficulty_percentile: {
-                $percentile: {
-                    input: "$difficulty",
-                    p: [parseFloat(percentileString!) + (Math.random() * 0.1 - 0.05)],
-                    method: "approximate"
+        {
+            $match: { size: boardSize }
+        },
+        {
+            $group: {
+                _id: null,
+                difficulty_percentile: {
+                    $percentile: {
+                        input: "$difficulty",
+                        p: [
+                            Math.max(0, Math.min(1, parseFloat(percentileString!) + (Math.random() * 0.1 - 0.05)))
+                        ],
+                        method: "approximate"
+                    }
                 }
             }
-        }}
+        }
     ]
+    
 
     const percentileDoc = (await collections.boards?.aggregate(getPercentilePipeline).toArray());
 
@@ -131,5 +132,24 @@ export const postBoard: Handler = async (_event: APIGatewayProxyEventV2, _contex
     return {
         statusCode: 200,
         body: "board successfully created"
+    }
+}
+
+// add an endpoint for postBoard2, where users can instead post a board, and the lambda function just has to validate it
+// should also calculate the board difficulty at the same time!
+export const postBoard2: Handler = async (_event: APIGatewayProxyEventV2, _context: Context) => {
+    if (!_event.body) {
+        return {
+            statusCode: 400,
+            body: "please give a board lol"
+        }
+    }
+
+    const board = JSON.parse(_event.body!).colorMap
+    console.log(board);
+
+    return {
+        statusCode: 200,
+        body: "aughh"
     }
 }

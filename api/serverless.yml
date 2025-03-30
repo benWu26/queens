@@ -6,7 +6,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs22.x
+  runtime: nodejs20.x
   region: us-east-1
   stage: ${opt:stage}
   timeout: 30
@@ -20,10 +20,10 @@ functions:
       - http:
           path: /generate
           method: get
-    handler: src/controllers/generateController.getBoard
     middleware:
-      - src/middleware/validateBoardSize.validateBoardSize
-      - src/controllers/generateController.getBoard
+      pre:
+        - src/middleware/validateBoardSize.validateBoardSize
+    handler: src/controllers/generateController.getBoard
 
   # post board
   PostBoard:
@@ -31,7 +31,14 @@ functions:
       - http:
           path: /generate
           method: post
-    handler: src/controllers/generateController.postBoard
     middleware:
-      - src/middleware/validateBoardSize.validateBoardSize
-      - src/controllers/generateController.postBoard
+      pre:
+        - src/middleware/validateBoardSize.validateBoardSize
+    handler: src/controllers/generateController.postBoard
+
+  PostBoard2:
+    events:
+      - http:
+          path: /send
+          method: post
+    handler: src/controllers/generateController.postBoard2

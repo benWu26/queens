@@ -1,3 +1,5 @@
+// React component for an individual cell of a board.
+
 import { cellPropType } from 'shared';
 import React, { memo} from 'react';
 import dot from './assets/dot.svg';
