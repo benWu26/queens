@@ -1,4 +1,4 @@
-import { cellType, boardType, nodeLabelType} from "./types"
+import { cellType, boardType, nodeLabelType } from "./types";
 import { solvePuzzleRecursively, solvePuzzleRuleBased } from "./BoardSolver";
 import _ from "lodash";
 import { Graph, json, Edge } from "graphlib";
@@ -11,7 +11,6 @@ const clone = rfdc();
 // select an edge of the cell at random
 // take the two nodes that edge connects to
 // merge them into one node, combine their cellLists together
-
 
 /**
  * Creates a graph of size n^2, with each node representing a cell on an n x n board.
@@ -39,19 +38,18 @@ const createGraph = (size: number): Graph => {
 
             // Add an edge below the current cell, if it exists
             if (i < size - 1) {
-                g.setEdge(index.toString(), (index + size).toString(), {weight: 2});
+                g.setEdge(index.toString(), (index + size).toString(), { weight: 2 });
             }
 
             // Add an edge to the right of the current cell, if it exists
             if (j < size - 1) {
-                g.setEdge(index.toString(), (index + 1).toString(), {weight: 2});
+                g.setEdge(index.toString(), (index + 1).toString(), { weight: 2 });
             }
         }
     }
 
     return g;
-}
-
+};
 
 /**
  * Merges two nodes in a graph, preserving the original node's edges and labels, and removing the other node.
@@ -60,14 +58,15 @@ const createGraph = (size: number): Graph => {
  * @param {string} stayNode the node to preserve
  * @param {string} elimNode the node to remove
  */
-const mergeNodes = (graph: Graph, stayNode: string, elimNode: string): void =>  {
+const mergeNodes = (graph: Graph, stayNode: string, elimNode: string): void => {
     if (!graph.hasNode(stayNode) || !graph.hasNode(elimNode)) {
-      throw new Error('Both stayNode and elimNode must exist in the graph.');
+        throw new Error("Both stayNode and elimNode must exist in the graph.");
     }
-  
+
     // Remove the edge between stayNode and elimNode if it exists
-    if (graph.hasEdge(stayNode, elimNode)) { // O(1)
-      graph.removeEdge(stayNode, elimNode); // O(1)
+    if (graph.hasEdge(stayNode, elimNode)) {
+        // O(1)
+        graph.removeEdge(stayNode, elimNode); // O(1)
     }
 
     // Add all of elimNode's cells to stayNode
@@ -76,22 +75,21 @@ const mergeNodes = (graph: Graph, stayNode: string, elimNode: string): void =>  
 
     // Get all neighbors of elimNode
     const neighbors = graph.neighbors(elimNode) || []; // O(|V|)
-  
 
     const stayNodeSize = graph.node(stayNode).size;
     // Rewire edges and remove connections to elimNode
-    for (const neighbor of neighbors) { // roughly O(1) iterations
-      if (neighbor !== stayNode) {
-        const neighborSize = graph.node(neighbor).size;
-        // Create a new edge between stayNode and elimNode's neighbors
-        graph.setEdge(stayNode, neighbor, {weight: neighborSize + stayNodeSize}); // O(1)
-      }
+    for (const neighbor of neighbors) {
+        // roughly O(1) iterations
+        if (neighbor !== stayNode) {
+            const neighborSize = graph.node(neighbor).size;
+            // Create a new edge between stayNode and elimNode's neighbors
+            graph.setEdge(stayNode, neighbor, { weight: neighborSize + stayNodeSize }); // O(1)
+        }
     }
-  
+
     // Remove elimNode from the graph
     graph.removeNode(elimNode); // O(E) time
-}
-
+};
 
 /**
  * Samples an edge from a given list of edges in a graph, using a given probability function to weight the sampling.
@@ -102,10 +100,10 @@ const mergeNodes = (graph: Graph, stayNode: string, elimNode: string): void =>  
  */
 const sampleFromEdgeList = (graph: Graph, edgeList: Edge[], probabilityFunction: (w: any) => any) => {
     // Calculate the weights of all edges in the list
-    const weights = edgeList.map((edge) => graph.edge(edge).weight);
+    const weights = edgeList.map(edge => graph.edge(edge).weight);
 
     // Calculate the probability of each edge being sampled, using the provided probability function
-    const probs = weights.map((weight) => probabilityFunction(weight));
+    const probs = weights.map(weight => probabilityFunction(weight));
 
     // Calculate the cumulative probability of all edges
     const c = _.sum(probs);
@@ -121,9 +119,7 @@ const sampleFromEdgeList = (graph: Graph, edgeList: Edge[], probabilityFunction:
             return edgeList[i];
         }
     }
-}
-
-
+};
 
 /**
  * Takes a graph and reduces it down to n nodes, where n is the side length of the board.
@@ -138,8 +134,9 @@ const colorGraph = (graph: Graph, size: number): Graph => {
     graph = json.read(json.write(graph));
 
     // Reduce the size of the graph until it has the desired size
-    for (let i = 0; i < size**2 - size; i++) { // O(n^2) iterations
-        const probabilityFunction = (n: number) => (1/(n**6))
+    for (let i = 0; i < size ** 2 - size; i++) {
+        // O(n^2) iterations
+        const probabilityFunction = (n: number) => 1 / n ** 6;
         const edge = sampleFromEdgeList(graph, graph.edges(), probabilityFunction);
         //const edge = _.sample(graph.edges());
         if (edge) {
@@ -149,7 +146,7 @@ const colorGraph = (graph: Graph, size: number): Graph => {
     }
 
     return graph;
-}
+};
 
 const constructColorMapFromGraph = (graph: Graph): number[][] => {
     const size = graph.nodes().length;
@@ -167,11 +164,11 @@ const constructColorMapFromGraph = (graph: Graph): number[][] => {
             const rowIdx = Math.floor(idx / size);
             const colIdx = idx % size;
             colorMap[rowIdx][colIdx] = nodeIdx;
-        })
+        });
     });
 
     return colorMap;
-}
+};
 
 /**
  * Takes a graph and constructs a board from it. The board is a 2D array of cells, where each cell has a color and player status.
@@ -182,19 +179,21 @@ const constructColorMapFromGraph = (graph: Graph): number[][] => {
  */
 const constructBoardFromColorMap = (colorMap: number[][]): boardType => {
     // Create the board by mapping the color map to cells
-    const board: boardType = colorMap.map((row, ridx) => row.map((c, cidx): cellType => {
-        // Each cell has a color, player status, real status, and causes
-        return {
-            color: c,
-            playerStatus: "valid",
-            causes: [],
-            row: ridx,
-            column: cidx
-        }
-    }))
+    const board: boardType = colorMap.map((row, ridx) =>
+        row.map((c, cidx): cellType => {
+            // Each cell has a color, player status, real status, and causes
+            return {
+                color: c,
+                playerStatus: "valid",
+                causes: [],
+                row: ridx,
+                column: cidx,
+            };
+        })
+    );
 
     return board;
-}
+};
 
 /**
  * Takes a board and constructs a color map from it. The color map is a 2D array of numbers, where each number is the index of the node in the graph that contains the cell's index in its cellList.
@@ -203,13 +202,15 @@ const constructBoardFromColorMap = (colorMap: number[][]): boardType => {
  */
 const constructColorMapFromBoard = (board: boardType): number[][] => {
     // Create the color map by mapping the board to cells
-    const colorMap: number[][] = board.map((row, ridx) => row.map((cell, cidx) => {
-        // Each cell has a color, player status, real status, and causes
-        return cell.color;
-    }))
+    const colorMap: number[][] = board.map((row, ridx) =>
+        row.map((cell, cidx) => {
+            // Each cell has a color, player status, real status, and causes
+            return cell.color;
+        })
+    );
 
     return colorMap;
-}
+};
 
 /**
  * Generates a new board of a given size by first creating a graph with the given number of nodes,
@@ -228,8 +229,7 @@ const generateOneBoard = (size: number): boardType => {
     const colorMap = constructColorMapFromGraph(coloredGraph);
     const board = constructBoardFromColorMap(colorMap);
     return board;
-}
-
+};
 
 /**
  * Generates a valid board of a given size by repeatedly generating boards until a valid one is found.
@@ -237,7 +237,7 @@ const generateOneBoard = (size: number): boardType => {
  * @param {number} size the size of the board to generate
  * @returns {boardType} the generated board
  */
-const generateValidBoardRuleBased = (size: number): {board: number[][], difficulty: number} => {
+const generateValidBoardRuleBased = (size: number): { board: number[][]; difficulty: number } => {
     // Keep track of the number of iterations it takes to find a valid board
     let num_iterations = 0;
     // Keep track of the average time it takes to generate a board
@@ -255,55 +255,54 @@ const generateValidBoardRuleBased = (size: number): {board: number[][], difficul
         const puzzleBoard = generateOneBoard(size);
         const generateOnePuzzleEndTime = performance.now();
         // Add the time it took to generate this board to the total
-        avg_gen_time += (generateOnePuzzleEndTime - generateOnePuzzleStartTime);
+        avg_gen_time += generateOnePuzzleEndTime - generateOnePuzzleStartTime;
 
         const solveStartTime = performance.now();
         // Solve the generated board
         const sols = solvePuzzleRuleBased(clone(puzzleBoard));
         const solveEndTime = performance.now();
         // Add the time it took to solve this board to the total
-        avg_solve_time += (solveEndTime - solveStartTime);
+        avg_solve_time += solveEndTime - solveStartTime;
 
         // If the board has a unique solution, return it
         if (sols) {
             const generateValidPuzzleEndTime = performance.now();
-            console.log(`Total generation time: ${generateValidPuzzleEndTime - generateValidPuzzleStartTime} ms`)
+            console.log(`Total generation time: ${generateValidPuzzleEndTime - generateValidPuzzleStartTime} ms`);
             console.log(`   number of puzzles generated: ${num_iterations}`);
             console.log(`   average puzzle gen time: ${avg_gen_time / num_iterations} ms`);
             console.log(`   average puzzle solve time: ${avg_solve_time / num_iterations} ms`);
 
-            return {board: constructColorMapFromBoard(puzzleBoard), difficulty: sols.difficulty};
+            return { board: constructColorMapFromBoard(puzzleBoard), difficulty: sols.difficulty };
         }
     }
-}
+};
 
 const generateValidBoardRecursive = (size: number): boardType => {
     let num_iterations = 0;
     let avg_gen_time = 0;
     let avg_solve_time = 0;
 
-    while(true) {
+    while (true) {
         num_iterations += 1;
         const generateStartTime = performance.now();
         const puzzleBoard = generateOneBoard(size);
         const generateEndTime = performance.now();
-        avg_gen_time += (generateEndTime - generateStartTime);
+        avg_gen_time += generateEndTime - generateStartTime;
 
         const solveStartTime = performance.now();
         const sols = solvePuzzleRecursively(clone(puzzleBoard));
         const solveEndTime = performance.now();
-        avg_solve_time += (solveEndTime - solveStartTime);
+        avg_solve_time += solveEndTime - solveStartTime;
 
-        if (sols.length === 1){
+        if (sols.length === 1) {
             console.log(`number of puzzles generated: ${num_iterations}`);
-            console.log(`average puzzle gen time: ${avg_gen_time/num_iterations} ms`);
-            console.log(`average puzzle solve time: ${avg_solve_time/num_iterations} ms`);
+            console.log(`average puzzle gen time: ${avg_gen_time / num_iterations} ms`);
+            console.log(`average puzzle solve time: ${avg_solve_time / num_iterations} ms`);
 
             return puzzleBoard;
         }
     }
-}
-
+};
 
 const testGenerationSpeed = (size: number, k: number) => {
     let totalGenerateTime = 0;
@@ -311,10 +310,15 @@ const testGenerationSpeed = (size: number, k: number) => {
         const generateStartTime = performance.now();
         generateOneBoard(size);
         const generateEndTime = performance.now();
-        totalGenerateTime += (generateEndTime - generateStartTime);
+        totalGenerateTime += generateEndTime - generateStartTime;
     }
-    console.log(`average time per iteration: ${totalGenerateTime/k} ms`);
-}
+    console.log(`average time per iteration: ${totalGenerateTime / k} ms`);
+};
 
-export {generateValidBoardRuleBased, constructBoardFromColorMap, testGenerationSpeed, generateOneBoard,
-     generateValidBoardRecursive}
+export {
+    generateValidBoardRuleBased,
+    constructBoardFromColorMap,
+    testGenerationSpeed,
+    generateOneBoard,
+    generateValidBoardRecursive,
+};

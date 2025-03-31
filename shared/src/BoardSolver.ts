@@ -1,15 +1,15 @@
-import { getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic"
-import { boardType, cellType, cellGroupType } from "./types"
+import { getInvalidCells, autoInvalidateMultipleCells, removeInvalidationCause } from "./BoardInteractionLogic";
+import { boardType, cellType, cellGroupType } from "./types";
 import rfdc from "rfdc";
 const clone = rfdc();
 import _ from "lodash";
-import {cellChangeType, ruleFunctionType, boardGroupsType, ruleReturnType} from "./types"
+import { cellChangeType, ruleFunctionType, boardGroupsType, ruleReturnType } from "./types";
 // --------------------------- SOLUTION VALIDATION ------------------------------
 
 const areTwoCellsMutuallyExclusive = (cell1: cellType, cell2: cellType) => {
     if (cell1 === cell2) return false;
-    return (cell1.row === cell2.row || cell1.column === cell2.column || cell1.color === cell2.color);
-}
+    return cell1.row === cell2.row || cell1.column === cell2.column || cell1.color === cell2.color;
+};
 
 /**
  * Validates whether a given board is a solution to the puzzle.
@@ -19,7 +19,7 @@ const areTwoCellsMutuallyExclusive = (cell1: cellType, cell2: cellType) => {
  * @returns {boolean} whether the given board is a solution
  */
 const validateSolution = (board: boardType): boolean => {
-    const stars: cellType[] = []
+    const stars: cellType[] = [];
     for (let row of board) {
         for (let cell of row) {
             if (cell.playerStatus === "star") {
@@ -38,7 +38,7 @@ const validateSolution = (board: boardType): boolean => {
     }
 
     return true;
-}
+};
 
 /**
  * Recursive step of the solvePuzzle algorithm.
@@ -46,27 +46,26 @@ const validateSolution = (board: boardType): boolean => {
  * @param {number} ridx the row index to try placing a star in
  * @returns {boardType | false} the solved board if the algorithm finds a solution, otherwise false
  */
-const solvePuzzleRecursiveStep = (board: boardType, ridx: number) : boardType[] => {
+const solvePuzzleRecursiveStep = (board: boardType, ridx: number): boardType[] => {
     if (ridx === board.length) {
         return [board];
     }
 
-    const possibleSolutions: boardType[] = []
+    const possibleSolutions: boardType[] = [];
 
     for (const [cidx, cell] of board[ridx].entries()) {
         if (cell.playerStatus === "valid") {
             cell.playerStatus = "star";
             autoInvalidateMultipleCells(ridx, cidx, board);
-            possibleSolutions.push(...solvePuzzleRecursiveStep(board, ridx+1));
-            
+            possibleSolutions.push(...solvePuzzleRecursiveStep(board, ridx + 1));
+
             removeInvalidationCause(ridx, cidx, board);
             cell.playerStatus = "valid";
         }
     }
 
     return possibleSolutions;
-}
-
+};
 
 /**
  * Solves a given puzzle by placing stars in valid cells and trying to find a solution.
@@ -78,7 +77,7 @@ const solvePuzzleRecursiveStep = (board: boardType, ridx: number) : boardType[] 
  */
 const solvePuzzleRecursively = (board: boardType) => {
     return solvePuzzleRecursiveStep(board, 0);
-}
+};
 
 // rule based solver:
 // apply list of rules sequentially
@@ -95,19 +94,17 @@ const solvePuzzleRecursively = (board: boardType) => {
 // at the start of each run of rules, check if the board is solved (call validateSolution)
 // if validateSolution returns true, return the curent state of the board
 
-
-
 const createDefaultCellGroup = (): cellGroupType => {
     return {
         cells: new Set<cellType>(),
-        resolved: false
+        resolved: false,
     };
-}
+};
 
 const splitBoardIntoGroups = (board: boardType): boardGroupsType => {
-    const rows: cellGroupType[] = []
-    const columns: cellGroupType[] = []
-    const colorGroups: cellGroupType[] = []
+    const rows: cellGroupType[] = [];
+    const columns: cellGroupType[] = [];
+    const colorGroups: cellGroupType[] = [];
 
     for (let i = 0; i < board.length; i++) {
         rows.push(createDefaultCellGroup());
@@ -116,7 +113,7 @@ const splitBoardIntoGroups = (board: boardType): boardGroupsType => {
     }
     for (let row of board) {
         for (let cell of row) {
-            if (cell.playerStatus === "valid"){
+            if (cell.playerStatus === "valid") {
                 rows[cell.row].cells.add(cell);
                 columns[cell.column].cells.add(cell);
                 colorGroups[cell.color].cells.add(cell);
@@ -127,21 +124,21 @@ const splitBoardIntoGroups = (board: boardType): boardGroupsType => {
             }
         }
     }
-    return {rows, columns, colorGroups};
-}
+    return { rows, columns, colorGroups };
+};
 
 const isBoardImpossible = (groups: boardGroupsType): boolean => {
     for (let group of [...groups.rows, ...groups.columns, ...groups.colorGroups]) {
         if (group.cells.size === 0 && group.resolved === false) return true;
     }
     return false;
-}
+};
 
 const removeCellFromGroup = (cell: cellType, groups: boardGroupsType) => {
     groups.rows[cell.row].cells.delete(cell);
     groups.columns[cell.column].cells.delete(cell);
     groups.colorGroups[cell.color].cells.delete(cell);
-}
+};
 
 const markInvalidCell = (cell: cellType, changes: cellChangeType[], groups: boardGroupsType) => {
     if (cell.playerStatus !== "invalid") {
@@ -149,11 +146,11 @@ const markInvalidCell = (cell: cellType, changes: cellChangeType[], groups: boar
         cell.playerStatus = "invalid";
         removeCellFromGroup(cell, groups);
     }
-}
+};
 
 const markStarCell = (cell: cellType, groups: boardGroupsType, board: boardType): ruleReturnType => {
     const changes: cellChangeType[] = [];
-    changes.push([cell.row, cell.column, 'star']);
+    changes.push([cell.row, cell.column, "star"]);
     cell.playerStatus = "star";
     removeCellFromGroup(cell, groups);
     groups.rows[cell.row].resolved = true;
@@ -164,18 +161,15 @@ const markStarCell = (cell: cellType, groups: boardGroupsType, board: boardType)
 
     invalidCells.forEach(invalidCell => {
         markInvalidCell(invalidCell, changes, groups);
-    })
-    return {changes, difficulty: 0}
-
-}
+    });
+    return { changes, difficulty: 0 };
+};
 
 // rule 1: if a set only has one valid cell, star it and auto invalidate
 // return the list of changes (star that cell, invalidate everything else)
 const applyStarPlacementRule = (board: boardType, groups: boardGroupsType): ruleReturnType | false => {
-
     for (let group of [...groups.rows, ...groups.columns, ...groups.colorGroups]) {
         if (group.cells.size === 1 && group.resolved === false) {
-            
             const cell = group.cells.values().next().value!;
             //console.log(`placing star, group size 1 found at row ${cell.row}, column ${cell.column}`);
             if (cell) {
@@ -185,10 +179,10 @@ const applyStarPlacementRule = (board: boardType, groups: boardGroupsType): rule
     }
 
     return false;
-}
+};
 
 // n = 10, r = 2:
-// 0,1  1,2  2,3  3,4  4,5  5,6  6,7  7,8  8,9 
+// 0,1  1,2  2,3  3,4  4,5  5,6  6,7  7,8  8,9
 // 012 123 234 456
 
 /**
@@ -203,7 +197,7 @@ const applyStarPlacementRule = (board: boardType, groups: boardGroupsType): rule
  * consecutive indices from 0 to n-1.
  */
 const generateConsecutiveIndexSets = (n: number, r: number): number[][] => {
-    const indexSets: number[][] = []
+    const indexSets: number[][] = [];
     // iterate over the range of indices, starting from 0 and going up to n - r + 1
     for (let i = 0; i < n - r + 1; i++) {
         const indexSet: number[] = []; // initialize an empty array to store the current set of indices
@@ -216,17 +210,17 @@ const generateConsecutiveIndexSets = (n: number, r: number): number[][] => {
         indexSets.push(indexSet);
     }
 
-    if (r === 2){
-        for (let i = 0; i < n - r; i++){
+    if (r === 2) {
+        for (let i = 0; i < n - r; i++) {
             const indexSet: number[] = [];
             indexSet.push(i);
-            indexSet.push(i+2);
+            indexSet.push(i + 2);
             indexSets.push(indexSet);
         }
     }
 
     return indexSets;
-}
+};
 
 /**
  * Given a boardGroupsType, total_size, and merge_size, this function will group the rows and columns
@@ -242,7 +236,7 @@ const generateConsecutiveIndexSets = (n: number, r: number): number[][] => {
  */
 const getMergedRCGroups = (groups: boardGroupsType, total_size: number, merge_size: number) => {
     const indexSets = generateConsecutiveIndexSets(total_size, merge_size);
-    
+
     // for each set in indexSets:
     // select those indices of rows/columns
     // destructure into one "group"
@@ -263,33 +257,32 @@ const getMergedRCGroups = (groups: boardGroupsType, total_size: number, merge_si
                 shouldMergeColumns = false;
                 return;
             }
-        })
-        
-        if (shouldMergeRows){
+        });
+
+        if (shouldMergeRows) {
             const mergedRowGroup: Set<cellType> = new Set();
             indexSet.forEach(idx => {
                 groups.rows[idx].cells.forEach(cell => {
                     mergedRowGroup.add(cell);
-                })
-            })
+                });
+            });
 
             mergedRowGroups.push(mergedRowGroup);
         }
-        
 
         if (shouldMergeColumns) {
             const mergedColumnGroup: Set<cellType> = new Set();
             indexSet.forEach(idx => {
                 groups.columns[idx].cells.forEach(cell => {
                     mergedColumnGroup.add(cell);
-                })
-            })
+                });
+            });
 
             mergedColumnGroups.push(mergedColumnGroup);
         }
     });
     return [mergedRowGroups, mergedColumnGroups];
-}
+};
 
 /**
  * Applies the icicle rule to the given board and groups.
@@ -327,7 +320,7 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): ruleReturnT
                         }
                     }
                     //console.log(changes);
-                    return {changes, difficulty: i}
+                    return { changes, difficulty: i };
                 }
             }
 
@@ -352,14 +345,14 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): ruleReturnT
                     if (!lockedColors.has(cell.color)) {
                         markInvalidCell(cell, changes, groups);
                     }
-                })
+                });
                 //console.log(changes);
-                return {changes, difficulty: i}
+                return { changes, difficulty: i };
             }
-        }        
+        }
     }
     return false;
-}
+};
 
 /**
  * Given a group of cells, returns a list of changes to the board if the "intersection of invalidated sets" rule
@@ -374,14 +367,12 @@ const applyIcicleRule = (board: boardType, groups: boardGroupsType): ruleReturnT
  * @returns {cellChangeType[] | false}
  */
 const markIntersectionOfInvalidatedSets = (cellGroup: cellGroupType, groups: boardGroupsType, board: boardType) => {
-    const invalidationSets: Set<cellType>[] = []; 
+    const invalidationSets: Set<cellType>[] = [];
     cellGroup.cells.forEach(cell => {
         const invalidationSet = new Set<cellType>(getInvalidCells(cell.row, cell.column, board));
         invalidationSets.push(invalidationSet);
     });
-    const intersection = invalidationSets.reduce(
-        (prev, current) => new Set([...prev].filter(x => current.has(x)))
-    );
+    const intersection = invalidationSets.reduce((prev, current) => new Set([...prev].filter(x => current.has(x))));
     if (intersection.size > 0) {
         const changes: cellChangeType[] = [];
         for (let cell of intersection) {
@@ -394,7 +385,7 @@ const markIntersectionOfInvalidatedSets = (cellGroup: cellGroupType, groups: boa
         }
     }
     return false;
-}
+};
 
 /**
  * Applies the "intersection of invalidated sets" rule to the given board and groups.
@@ -405,31 +396,25 @@ const markIntersectionOfInvalidatedSets = (cellGroup: cellGroupType, groups: boa
  * @returns {cellChangeType[] | false} An array of cell changes if the rule was applied, false otherwise.
  */
 const applyIntersectionRule = (board: boardType, groups: boardGroupsType): ruleReturnType | false => {
-    let sortedColorGroups = Array.from(groups.colorGroups).sort(
-        (a, b) => a.cells.size - b.cells.size
-    );
+    let sortedColorGroups = Array.from(groups.colorGroups).sort((a, b) => a.cells.size - b.cells.size);
     sortedColorGroups = sortedColorGroups.filter(group => group.cells.size > 0);
-    
 
     for (let colorGroup of sortedColorGroups) {
         const result = markIntersectionOfInvalidatedSets(colorGroup, groups, board);
-        if (result) return {changes: result, difficulty: colorGroup.cells.size};
+        if (result) return { changes: result, difficulty: colorGroup.cells.size };
     }
 
-    let sortedRowColumnGroups = [...groups.rows, ...groups.columns].sort(
-        (a, b) => a.cells.size - b.cells.size
-    );
-    sortedRowColumnGroups = sortedRowColumnGroups.filter(group => (group.cells.size > 0 && group.cells.size < 4));
+    let sortedRowColumnGroups = [...groups.rows, ...groups.columns].sort((a, b) => a.cells.size - b.cells.size);
+    sortedRowColumnGroups = sortedRowColumnGroups.filter(group => group.cells.size > 0 && group.cells.size < 4);
 
     for (let rcGroup of sortedRowColumnGroups) {
         const result = markIntersectionOfInvalidatedSets(rcGroup, groups, board);
-        if (result) return {changes: result, difficulty: rcGroup.cells.size + 1};
+        if (result) return { changes: result, difficulty: rcGroup.cells.size + 1 };
     }
     return false;
-}
+};
 
 const rulesWithoutBranching = [applyStarPlacementRule, applyIcicleRule, applyIntersectionRule];
-
 
 /**
  * Applies the branching rule to the given board and groups.
@@ -444,17 +429,16 @@ const rulesWithoutBranching = [applyStarPlacementRule, applyIcicleRule, applyInt
 const applyBranchRule = (board: boardType, groups: boardGroupsType): ruleReturnType | false => {
     //console.log(groups);
     const allGroups = [...groups.rows, ...groups.columns, ...groups.colorGroups];
-    const filteredGroups = allGroups
-        .filter(group => group.cells.size === 2)
-        //.reduce((prev, current) => (prev.cells.size < current.cells.size) ? prev : current);
+    const filteredGroups = allGroups.filter(group => group.cells.size === 2);
+    //.reduce((prev, current) => (prev.cells.size < current.cells.size) ? prev : current);
 
     if (!filteredGroups.length) {
         return false;
     }
 
-    const smallestGroup = filteredGroups
-        .reduce((prev, current) => (prev.cells.size < current.cells.size) ? prev : current);
-
+    const smallestGroup = filteredGroups.reduce((prev, current) =>
+        prev.cells.size < current.cells.size ? prev : current
+    );
 
     // choose the smallest group (should be k<4, otherwise return false);
     // create a copy of the board, place a star in one of the cells
@@ -481,7 +465,7 @@ const applyBranchRule = (board: boardType, groups: boardGroupsType): ruleReturnT
 
     // take turns on each board-group-changes set running solvePuzzleOneIteration
     // but a version without the branching rule
-    
+
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < smallestGroup.cells.size; j++) {
             const result = solvePuzzleOneIteration(branchedBoards[j], branchedGroupsList[j], rulesWithoutBranching);
@@ -492,33 +476,33 @@ const applyBranchRule = (board: boardType, groups: boardGroupsType): ruleReturnT
         const intersection: cellChangeType[] = [];
         changeLists.forEach(changeList => {
             changeList.forEach(change => {
-                if (changeLists.every(cl => cl.some(c => {
-                    return _.isEqual(c, change);
-                }))) {
+                if (
+                    changeLists.every(cl =>
+                        cl.some(c => {
+                            return _.isEqual(c, change);
+                        })
+                    )
+                ) {
                     intersection.push(change);
                 }
-            })
-        })
+            });
+        });
 
         if (intersection.length) {
             intersection.forEach(change => {
                 markInvalidCell(board[change[0]][change[1]], changes, groups);
-            })
+            });
             return {
                 changes,
-                difficulty: 5*(i+1)
-            }
+                difficulty: 5 * (i + 1),
+            };
         }
     }
 
     return false;
-
-    
-}
-
+};
 
 const rulesWithBranching = [applyStarPlacementRule, applyIcicleRule, applyIntersectionRule, applyBranchRule];
-
 
 /**
  * Runs one iteration of the rule-based solver on the given board and groups.
@@ -531,7 +515,11 @@ const rulesWithBranching = [applyStarPlacementRule, applyIcicleRule, applyInters
  * @param {ruleFunctionType[]} rules The list of rules to apply.
  * @returns {cellChangeType[] | boolean} The change list if a rule was applied, or true if the board is solved, or false if the board is impossible.
  */
-const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType, rules: ruleFunctionType[]): ruleReturnType | boolean => {
+const solvePuzzleOneIteration = (
+    board: boardType,
+    groups: boardGroupsType,
+    rules: ruleFunctionType[]
+): ruleReturnType | boolean => {
     if (isBoardImpossible(groups)) {
         return false;
     }
@@ -545,7 +533,7 @@ const solvePuzzleOneIteration = (board: boardType, groups: boardGroupsType, rule
         }
     }
     return false;
-}
+};
 
 /**
  * Solves the given puzzle using the rule-based solver.
@@ -569,13 +557,13 @@ const solvePuzzleRuleBased = (board: boardType) => {
         const result = solvePuzzleOneIteration(board, groups, rulesWithoutBranching);
 
         if (result === true) {
-            return {result, difficulty}
+            return { result, difficulty };
         } else if (!result) {
             return false;
         } else {
-            difficulty += result.difficulty
+            difficulty += result.difficulty;
         }
     }
-}
+};
 
-export {validateSolution, solvePuzzleRecursively, solvePuzzleRuleBased}
+export { validateSolution, solvePuzzleRecursively, solvePuzzleRuleBased };

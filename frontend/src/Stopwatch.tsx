@@ -1,7 +1,7 @@
-import {useState, useEffect, useRef} from 'react';
-import { stopWatchPropTypes } from 'shared';
+import { useState, useEffect, useRef } from "react";
+import { stopWatchPropTypes } from "shared";
 
-function Stopwatch (props: stopWatchPropTypes) {
+function Stopwatch(props: stopWatchPropTypes) {
     const [elapsedTime, setElapsedTime] = useState(0);
 
     // the ID of the current interval used to update the time
@@ -20,38 +20,35 @@ function Stopwatch (props: stopWatchPropTypes) {
 
         return () => {
             clearInterval(intervalIdRef.current);
-        }
-        
-    }, [props.isRunning])
+        };
+    }, [props.isRunning]);
 
     // resets time to 0
     useEffect(() => {
         if (props.reset) {
             startTimeRef.current = Date.now();
         }
-    }, [props.reset])
+    }, [props.reset]);
 
     // formats the elapsed time correctly
     function formatTime() {
         const minutes = Math.floor(elapsedTime / (1000 * 60));
         const seconds = Math.floor(elapsedTime / 1000) % 60;
-        const deciseconds = Math.floor(elapsedTime / 100) % 10
+        const deciseconds = Math.floor(elapsedTime / 100) % 10;
 
         return `${minutes ? minutes + ":" : ""}${minutes ? padZeros(seconds) : seconds}.${deciseconds}`;
-
     }
 
     // pads a number with a zero if it's less than 10
     const padZeros = (n: number) => {
-        return (n < 10 ? "0" + n : n)
-    }
+        return n < 10 ? "0" + n : n;
+    };
 
     return (
         <div className="stopwatch">
             <div className="display">{"solve time: " + formatTime()}</div>
         </div>
-    )
+    );
 }
-
 
 export default Stopwatch;

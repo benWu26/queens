@@ -1,34 +1,34 @@
 {
-  "name": "shared",
-  "version": "1.0.0",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/types/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ],
-  "exports": {
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js",
-    "types": "./dist/types/index.d.ts"
-  },
-  "scripts": {
-    "clean": "rm -rf dist",
-    "build:cjs": "tsc",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build": "npm run build:cjs && npm run build:esm"
-  },
-  "dependencies": {
-    "immer": "^10.1.1",
-    "lodash": "^4.17.21",
-    "shared": "file:"
-  },
-  "devDependencies": {
-    "@types/graphlib": "^2.1.12",
-    "@types/lodash": "^4.14.170",
-    "graphlib": "^2.1.8",
-    "prettier": "^3.5.3",
-    "rfdc": "^1.4.1",
-    "typescript": "^4.2.4"
-  }
+    "name": "shared",
+    "version": "1.0.0",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/types/index.d.ts",
+    "files": [
+        "dist/**/*"
+    ],
+    "exports": {
+        "require": "./dist/cjs/index.js",
+        "import": "./dist/esm/index.js",
+        "types": "./dist/types/index.d.ts"
+    },
+    "scripts": {
+        "clean": "rm -rf dist",
+        "build:cjs": "tsc",
+        "build:esm": "tsc -p tsconfig.esm.json",
+        "build": "npm run build:cjs && npm run build:esm"
+    },
+    "dependencies": {
+        "immer": "^10.1.1",
+        "lodash": "^4.17.21",
+        "shared": "file:"
+    },
+    "devDependencies": {
+        "@types/graphlib": "^2.1.12",
+        "@types/lodash": "^4.14.170",
+        "graphlib": "^2.1.8",
+        "prettier": "^3.5.3",
+        "rfdc": "^1.4.1",
+        "typescript": "^4.2.4"
+    }
 }
