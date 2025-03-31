@@ -28,6 +28,7 @@
     "graphlib": "^2.1.8",
     "lodash": "^4.17.21",
     "mongodb": "^6.12.0",
+    "prettier": "^3.5.3",
     "rfdc": "^1.4.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
