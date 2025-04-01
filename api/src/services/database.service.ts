@@ -1,7 +1,7 @@
 import * as mongoDB from "mongodb";
 import * as dotenv from "dotenv";
 
-export const collections: {boards?: mongoDB.Collection} = {}
+export const collections: { boards?: mongoDB.Collection } = {};
 
 // connects to the MongoDB database using the connection string.
 export async function connectToDatabase() {
@@ -17,5 +17,7 @@ export async function connectToDatabase() {
 
     collections.boards = boardsCollection;
 
-    console.log(`Successfully connected to database: ${db.databaseName} and collection: ${boardsCollection.collectionName}`);
+    console.log(
+        `Successfully connected to database: ${db.databaseName} and collection: ${boardsCollection.collectionName}`
+    );
 }

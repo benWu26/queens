@@ -1,15 +1,14 @@
 {
     "compilerOptions": {
-      "declaration": true,           // Generate .d.ts files
-      "declarationDir": "./dist/types", // Output directory for type declarations
-      "outDir": "./dist/cjs",        // (For CommonJS) Output directory for JS files
-      "module": "CommonJS",
-      "strict": true,
-      "rootDir": "./src",
-      "esModuleInterop": true,
-      "target": "ES2022",
-      "moduleResolution": "node"
+        "declaration": true, // Generate .d.ts files
+        "declarationDir": "./dist/types", // Output directory for type declarations
+        "outDir": "./dist/cjs", // (For CommonJS) Output directory for JS files
+        "module": "CommonJS",
+        "strict": true,
+        "rootDir": "./src",
+        "esModuleInterop": true,
+        "target": "ES2022",
+        "moduleResolution": "node"
     },
-    "include": ["src/**/*"],
-  }
-  
+    "include": ["src/**/*"]
+}

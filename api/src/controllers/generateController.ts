@@ -1,4 +1,4 @@
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 import { collections } from "../services/database.service";
 import { generateValidBoardRuleBased } from "shared";
 import { Binary } from "mongodb";
@@ -22,7 +22,7 @@ const packColorMapToBytes = (board: number[][]): Uint8Array => {
     }
 
     return new Uint8Array(bytes);
-}
+};
 
 /**
  * Decodes the given bytes into a color map. The bytes are expected to be an array of packed color values
@@ -35,10 +35,10 @@ const packColorMapToBytes = (board: number[][]): Uint8Array => {
  * @returns {number[][]} the decoded color map
  */
 const decodeBytesIntoColorMap = (bytes: number[], size: number): number[][] => {
-    const flatColors: number[] = []
+    const flatColors: number[] = [];
 
     for (let i = 0; i < bytes.length; i++) {
-        const high = bytes[i] >> 4 & 0xf;
+        const high = (bytes[i] >> 4) & 0xf;
         const low = bytes[i] & 0xf;
         flatColors.push(high, low);
     }
@@ -51,13 +51,13 @@ const decodeBytesIntoColorMap = (bytes: number[], size: number): number[][] => {
     console.log(flatColors);
 
     const colorMap: number[][] = [];
-    
+
     while (flatColors.length) {
         colorMap.push(flatColors.splice(0, size));
     }
 
     return colorMap;
-}
+};
 
 /**
  * GET /board
@@ -75,39 +75,37 @@ export const getBoard = async (req: Request, res: Response) => {
     // select random sample (maybe 100)
 
     const getPercentilePipeline = [
-        {$match: {size: boardSize}},
-        {$group: {
-            _id: null,
-            difficulty_percentile: {
-                $percentile: {
-                    input: "$difficulty",
-                    p: [parseFloat(percentileString!) + (Math.random() * 0.1 - 0.05)],
-                    method: "approximate"
-                }
-            }
-        }}
-    ]
+        { $match: { size: boardSize } },
+        {
+            $group: {
+                _id: null,
+                difficulty_percentile: {
+                    $percentile: {
+                        input: "$difficulty",
+                        p: [parseFloat(percentileString!) + (Math.random() * 0.1 - 0.05)],
+                        method: "approximate",
+                    },
+                },
+            },
+        },
+    ];
 
-    const percentileDoc = (await collections.boards?.aggregate(getPercentilePipeline).toArray());
+    const percentileDoc = await collections.boards?.aggregate(getPercentilePipeline).toArray();
 
-    const targetDifficulty = percentileDoc![0].difficulty_percentile[0]
+    const targetDifficulty = percentileDoc![0].difficulty_percentile[0];
     console.log(targetDifficulty);
 
-    const getPuzzlePipeline = [
-        {$match: {size: boardSize, difficulty: targetDifficulty}},
-        {$sample: {size: 1}}
-    ]
+    const getPuzzlePipeline = [{ $match: { size: boardSize, difficulty: targetDifficulty } }, { $sample: { size: 1 } }];
 
-
-    const boardDocument = (await collections.boards?.aggregate(getPuzzlePipeline).toArray())
+    const boardDocument = await collections.boards?.aggregate(getPuzzlePipeline).toArray();
 
     if (boardDocument?.length) {
         const boardData = boardDocument[0].board.buffer;
         res.status(200).json(decodeBytesIntoColorMap(boardData, boardSize));
     } else {
-        res.status(404).json({"message": "board not found"});
+        res.status(404).json({ message: "board not found" });
     }
-}
+};
 
 /**
  * POST /board
@@ -120,8 +118,12 @@ export const postBoard = async (req: Request, res: Response) => {
     const boardSize = parseInt(sizeString!);
 
     const board = generateValidBoardRuleBased(boardSize);
-    
-    collections.boards?.insertOne({size: boardSize, difficulty: board.difficulty, board: new Binary(packColorMapToBytes(board.board))});
 
-    res.status(200).json({message: "board successfully created"})
-}
+    collections.boards?.insertOne({
+        size: boardSize,
+        difficulty: board.difficulty,
+        board: new Binary(packColorMapToBytes(board.board)),
+    });
+
+    res.status(200).json({ message: "board successfully created" });
+};

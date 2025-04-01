@@ -1,35 +1,31 @@
-import { cellType, boardType, playerStatusType} from "./types"
-import _ from "lodash"
+import { cellType, boardType, playerStatusType } from "./types";
+import _ from "lodash";
 import { produce } from "immer";
-
 
 // ------------------------HELPER STUFF----------------------------
 // status transitions when a player clicks on a cell
 const playerStatusTransitions: Record<playerStatusType, playerStatusType> = {
-    "valid": "invalid",
-    "invalid": "star",
-    "star": "valid",
+    valid: "invalid",
+    invalid: "star",
+    star: "valid",
 
     //add a cross to valid
-    "error": "valid"
-}
-
+    error: "valid",
+};
 
 //create an array of tuples of [row, column, valid/invalid]
-export interface event {//each event is a row, column, and validity
+export interface event {
+    //each event is a row, column, and validity
     xCoord: number;
     yCoord: number;
     validity: playerStatusType;
 }
-type eventgroup = event[];  //for when a group of events happen in dragging(at least one event is needed)
+type eventgroup = event[]; //for when a group of events happen in dragging(at least one event is needed)
 
 type eventstack = eventgroup[]; //creates a stack of event groups
 
 let eventGroup: eventgroup = [];
-let eventStack: eventstack = []; //creates an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT. 
-
-
-
+let eventStack: eventstack = []; //creates an empty stack to keep track of all event groups. THIS WILL BE WHAT THE UNDO BUTTON LOOKS AT.
 
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
@@ -40,23 +36,27 @@ let eventStack: eventstack = []; //creates an empty stack to keep track of all e
  * @param {boardType} board
  * @returns {Set<cellType>}
  */
-const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => { //dots coming from queens
+const getInvalidCells = (rowIndex: number, columnIndex: number, board: boardType) => {
+    //dots coming from queens
     const invalidCells = new Set<cellType>();
     board.forEach((row, ridx) => {
         row.forEach((cell, cidx) => {
             if ((ridx === rowIndex) !== (cidx === columnIndex)) {
                 invalidCells.add(cell);
             }
-            if ((ridx + 1 === rowIndex || ridx - 1 === rowIndex) && (cidx + 1 === columnIndex || cidx - 1 === columnIndex)) {
+            if (
+                (ridx + 1 === rowIndex || ridx - 1 === rowIndex) &&
+                (cidx + 1 === columnIndex || cidx - 1 === columnIndex)
+            ) {
                 invalidCells.add(cell);
             }
             if (cell.color === board[rowIndex][columnIndex].color && (ridx !== rowIndex || cidx !== columnIndex)) {
                 invalidCells.add(cell);
             }
-        })
-    })
+        });
+    });
     return invalidCells;
-}
+};
 
 /**
  * Sets cell.playerStatus to "invalid" if it's not already "star", and adds the given coordinates to cell.causes.
@@ -68,13 +68,11 @@ const autoInvalidateOneCell = (rowIndex: number, columnIndex: number, cell: cell
     if (cell.playerStatus !== "star") {
         cell.playerStatus = "invalid";
         cell.causes.push([rowIndex, columnIndex]);
-    } 
-    else{
+    } else {
         cell.playerStatus = "error";
         // cell.causes.push([rowIndex, columnIndex]);
     }
-
-}
+};
 
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
@@ -87,10 +85,10 @@ const autoInvalidateOneCell = (rowIndex: number, columnIndex: number, cell: cell
  */
 const autoInvalidateMultipleCells = (rowIndex: number, columnIndex: number, board: boardType) => {
     const invalidCells = getInvalidCells(rowIndex, columnIndex, board);
-    invalidCells.forEach((cell) => {
+    invalidCells.forEach(cell => {
         autoInvalidateOneCell(rowIndex, columnIndex, cell);
-    })
-}
+    });
+};
 
 /**
  * Given a board, and the coordinates of a cell that is being un-invalidated, this function will
@@ -102,15 +100,15 @@ const autoInvalidateMultipleCells = (rowIndex: number, columnIndex: number, boar
  */
 
 const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: boardType) => {
-    board.forEach((row) => {
-        row.forEach((cell) => {
-            cell.causes = cell.causes.filter(c => !(_.isEqual(c, [rowIndex, columnIndex])))
+    board.forEach(row => {
+        row.forEach(cell => {
+            cell.causes = cell.causes.filter(c => !_.isEqual(c, [rowIndex, columnIndex]));
             if (cell.causes.length === 0 && cell.playerStatus === "invalid") {
                 cell.playerStatus = "valid";
             }
-        })
-    })
-}
+        });
+    });
+};
 
 // ---------------------------------------- RESPONSES TO USER EVENTS (CLICK, DRAG) ---------------------------------------------------------
 
@@ -129,10 +127,10 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
     //console.log("invalidateCellOnDrag called")
 
     if (board[rowIndex][columnIndex].playerStatus === "valid") {
-
         console.log("if branch taken");
-      
-        const currentEvent: event = {//save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+
+        const currentEvent: event = {
+            //save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
             xCoord: rowIndex,
             yCoord: columnIndex,
             validity: "valid",
@@ -141,15 +139,14 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
         //adds to group
         pushEventGroup(currentEvent);
 
-        return produce(board, (draftBoard) => {
+        return produce(board, draftBoard => {
             draftBoard[rowIndex][columnIndex].playerStatus = "invalid";
             draftBoard[rowIndex][columnIndex].causes.push("human");
-        })
+        });
     } else {
         return board;
     }
-}
-
+};
 
 /**
  * Given a board, and the coordinates of a cell that a player is clicking on, this function will
@@ -162,8 +159,9 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
  * @param {number} columnIndex
  * @param {boardType} board
  */
-const updateBoard = (rowIndex: number, columnIndex: number, board: boardType, autoPlacement: boolean) => { //UPDATE BOARD GETS CALLED WHEN CLICKED ONA A CELL
-    return produce(board, (draftBoard) => {
+const updateBoard = (rowIndex: number, columnIndex: number, board: boardType, autoPlacement: boolean) => {
+    //UPDATE BOARD GETS CALLED WHEN CLICKED ONA A CELL
+    return produce(board, draftBoard => {
         const clickedCell = draftBoard[rowIndex][columnIndex] as cellType;
         const currentStatus = clickedCell.playerStatus;
         const nextStatus = playerStatusTransitions[currentStatus];
@@ -197,29 +195,28 @@ const updateBoard = (rowIndex: number, columnIndex: number, board: boardType, au
             reverseErrors(rowIndex, columnIndex, draftBoard);
         }
     });
-}
-
+};
 
 // ---------------------------- UNDO BUTTON LOGIC -------------------------------
 
-const undoEvent = (board: boardType) => { //you don't need x and y because its being read in the eventgroup
-    if(eventStack.length === 0 ){ //if empty, do nothing
+const undoEvent = (board: boardType) => {
+    //you don't need x and y because its being read in the eventgroup
+    if (eventStack.length === 0) {
+        //if empty, do nothing
         return board;
-    }
-    else{ //if not, actually undo
-
+    } else {
+        //if not, actually undo
 
         //clone a new board
-        return produce(board, (draftBoard) => {
-
+        return produce(board, draftBoard => {
             //read latest event group
-            let currentEventGroup:eventgroup = eventStack[eventStack.length - 1];
-
+            let currentEventGroup: eventgroup = eventStack[eventStack.length - 1];
 
             //pop off the array
             eventStack.pop();
 
-            for (let i = 0; i < currentEventGroup.length; i++) { //for each element in the event group
+            for (let i = 0; i < currentEventGroup.length; i++) {
+                //for each element in the event group
                 const rowIndex = currentEventGroup[i].xCoord;
                 const columnIndex = currentEventGroup[i].yCoord;
 
@@ -228,32 +225,30 @@ const undoEvent = (board: boardType) => { //you don't need x and y because its b
 
                 const undoState = currentEventGroup[i].validity;
 
-
                 cell.playerStatus = undoState;
 
                 //reads the undo state and turns it into what cell used to (along with the changes)
-                if(undoState === "invalid"){ 
+                if (undoState === "invalid") {
                     reverseErrors(rowIndex, columnIndex, draftBoard); //create an event for undoing?
                     cell.causes.push("human");
                     removeInvalidationCause(rowIndex, columnIndex, draftBoard);
-                }
-                else if (undoState === "star") { 
+                } else if (undoState === "star") {
                     cell.causes = [];
-                    
+
                     autoInvalidateMultipleCells(rowIndex, columnIndex, draftBoard);
-                }
-                else{ //undo state == valid
+                } else {
+                    //undo state == valid
                     cell.causes = [];
                 }
             }
         });
     }
-}
+};
 
 // RESET STATE
 
 const resetBoardState = (board: boardType) => {
-    return produce(board, (draftBoard) => {
+    return produce(board, draftBoard => {
         for (let row of draftBoard) {
             for (let cell of row) {
                 cell.playerStatus = "valid";
@@ -261,32 +256,42 @@ const resetBoardState = (board: boardType) => {
             }
         }
     });
-}
+};
 
 //EVENT GROUP HELPER FUNCTIONS
 
-//create a event group 
+//create a event group
 const emptyEventGroup = () => {
-    eventGroup = []; //empties group 
-}
+    eventGroup = []; //empties group
+};
 
 const pushEventGroup = (currentEvent: event) => {
     eventGroup.push(currentEvent);
-}
+};
 
-
-const addGroupToStack = () => { //when mouseup, stop adding to group and push into main stack
-    if(eventGroup.length !== 0 ){
+const addGroupToStack = () => {
+    //when mouseup, stop adding to group and push into main stack
+    if (eventGroup.length !== 0) {
         eventStack.push(eventGroup);
     }
-}
+};
 
 const reverseErrors = (rowIndex: number, columnIndex: number, board: boardType) => {
     const checkCells = getInvalidCells(rowIndex, columnIndex, board);
-        checkCells.forEach((cell) => {
-            if(cell.playerStatus == "error")
-                cell.playerStatus = "star";
-        })
-}
+    checkCells.forEach(cell => {
+        if (cell.playerStatus == "error") cell.playerStatus = "star";
+    });
+};
 
-export {invalidateCellOnDrag, updateBoard, undoEvent, getInvalidCells, autoInvalidateMultipleCells, autoInvalidateOneCell, removeInvalidationCause, emptyEventGroup, addGroupToStack, resetBoardState}
+export {
+    invalidateCellOnDrag,
+    updateBoard,
+    undoEvent,
+    getInvalidCells,
+    autoInvalidateMultipleCells,
+    autoInvalidateOneCell,
+    removeInvalidationCause,
+    emptyEventGroup,
+    addGroupToStack,
+    resetBoardState,
+};
