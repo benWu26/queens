@@ -1,17 +1,15 @@
 import { cellPropType } from "shared";
 import React, { memo } from "react";
-import dot from "./assets/dot.svg";
-import crown from "./assets/crown.svg";
-import error from "./assets/error.svg";
+import Dot from "./assets/dot.svg?react";
+import Crown from "./assets/crown.svg?react";
+import Error from "./assets/error.svg?react";
 
 // what should be displayed in the cell
 const symbols = {
     valid: "",
-    invalid: <img className="symbol" src={dot} alt="" />,
-    star: <img className="symbol" src={crown} alt="" />,
-
-    //added cross
-    error: <img className="symbol" src={error} alt="" />,
+    invalid: <Dot className="symbol" />,
+    star: <Crown className="symbol" />,
+    error: <Error className="symbol" />,
 };
 
 // for mapping colors to numbers (good for customization later!)
