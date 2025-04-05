@@ -114,21 +114,23 @@ const removeInvalidationCause = (rowIndex: number, columnIndex: number, board: b
 
 /**
  * Given a board, and the coordinates of a cell that a player is dragging over, this function will
- * update the board based on the rules of the game. If the cell is currently valid, it will be
- * set to "invalid" status, and the cause will be labeled as "human". If the cell is currently
- * invalid or a star, it will be left alone. This is used when a player is dragging the mouse
- * over the board, and we want to invalidate cells as the mouse moves over them.
+ * update the board based on the rules of the game. If `invalidateMode` is true, valid cells will be
+ * set to "invalid" status, and the cause will be labeled as "human". If false, invalid cells will be
+ * validated. Stars will be left alone. `invalidateMode` is determined by the cell where the drag
+ * started: valid cells trigger invalidate mode, invalid cells trigger validate mode.
  * @param {number} rowIndex
  * @param {number} columnIndex
  * @param {boardType} board
+ * @param {boolean} invalidateMode - true to invalidate valid cells, false to validate invalid cells
  * @returns {boardType}
  */
-const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boardType): boardType => {
-    //console.log("invalidateCellOnDrag called")
-
-    if (board[rowIndex][columnIndex].playerStatus === "valid") {
-        console.log("if branch taken");
-
+const updateCellOnDrag = (
+    rowIndex: number,
+    columnIndex: number,
+    board: boardType,
+    invalidateMode: boolean
+): boardType => {
+    if (invalidateMode && board[rowIndex][columnIndex].playerStatus === "valid") {
         const currentEvent: event = {
             //save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
             xCoord: rowIndex,
@@ -143,9 +145,26 @@ const invalidateCellOnDrag = (rowIndex: number, columnIndex: number, board: boar
             draftBoard[rowIndex][columnIndex].playerStatus = "invalid";
             draftBoard[rowIndex][columnIndex].causes.push("human");
         });
-    } else {
-        return board;
     }
+
+    if (!invalidateMode && board[rowIndex][columnIndex].playerStatus === "invalid") {
+        const currentEvent: event = {
+            //save the event as (x,y, currentStatus) because the previous thingy needs to be saved to be undoed
+            xCoord: rowIndex,
+            yCoord: columnIndex,
+            validity: "invalid",
+        };
+
+        //adds to group
+        pushEventGroup(currentEvent);
+
+        return produce(board, draftBoard => {
+            draftBoard[rowIndex][columnIndex].playerStatus = "valid";
+            draftBoard[rowIndex][columnIndex].causes.push("human");
+        });
+    }
+
+    return board;
 };
 
 /**
@@ -284,7 +303,7 @@ const reverseErrors = (rowIndex: number, columnIndex: number, board: boardType) 
 };
 
 export {
-    invalidateCellOnDrag,
+    updateCellOnDrag,
     updateBoard,
     undoEvent,
     getInvalidCells,

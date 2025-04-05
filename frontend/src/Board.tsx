@@ -3,14 +3,7 @@ import Cell from "./Cell";
 import { boardType, boardPropType } from "shared";
 import _ from "lodash";
 
-import {
-    updateBoard,
-    invalidateCellOnDrag,
-    undoEvent,
-    emptyEventGroup,
-    resetBoardState,
-    addGroupToStack,
-} from "shared";
+import { updateBoard, updateCellOnDrag, undoEvent, emptyEventGroup, resetBoardState, addGroupToStack } from "shared";
 
 import rfdc from "rfdc";
 const clone = rfdc();
@@ -28,9 +21,13 @@ function Board(props: boardPropType) {
     // ref variable for detecting if mouse is pressed or not
     const mouseDownRef = useRef(false);
 
-    // when we click on a cell, both mouseDown and mouseEnter events are triggered. To prevent both
-    // callbacks from being called, we set a 50ms delay using suppressMouseRef.
-    const suppressMouseRef = useRef(false);
+    // ref variable for detecting if mouse is being dragged
+    const mouseDragRef = useRef(false);
+
+    // ref variable for cell toggle mode
+    // this is set when the mouse is pressed and the cell is valid or invalid
+    // this is used for when we are dragging to determine whether we should invalidate or validate the cell
+    const invalidateModeRef = useRef(true);
 
     // when the board passed in from props changes, we want to set the board and reset the stopwatch
     useEffect(() => {
@@ -49,7 +46,6 @@ function Board(props: boardPropType) {
     const borders = useMemo(() => {
         return props.board.map((row, rowIndex) =>
             row.map((cell, columnIndex) => {
-                console.log("border recalculated");
                 let bottomBorder = false;
                 let rightBorder = false;
                 let topBorder = false;
@@ -93,25 +89,39 @@ function Board(props: boardPropType) {
     // updates the board when a cell is clicked
     const onCellClick = useCallback(
         (rowIndex: number, columnIndex: number): void => {
-            setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b, props.autoPlace));
+            if (!mouseDragRef.current) {
+                setBoard((b): boardType => updateBoard(rowIndex, columnIndex, b, props.autoPlace));
+            }
         },
         [props.autoPlace]
     );
 
     // when the mouse is dragged over a cell, invalidates the cell if the mouse is pressed
-    const onCellDrag = useCallback((rowIndex: number, columnIndex: number): void => {
-        if (mouseDownRef.current && !suppressMouseRef.current) {
-            setBoard((b): boardType => invalidateCellOnDrag(rowIndex, columnIndex, b));
-        }
-    }, []);
+    const onCellDrag = useCallback(
+        (
+            board: boardType,
+            rowIndex: number,
+            columnIndex: number,
+            toggleModeRef: React.MutableRefObject<boolean>
+        ): void => {
+            if (mouseDownRef.current && !mouseDragRef.current) {
+                if (board[rowIndex][columnIndex].playerStatus === "valid") {
+                    toggleModeRef.current = true;
+                } else if (board[rowIndex][columnIndex].playerStatus === "invalid") {
+                    toggleModeRef.current = false;
+                }
+            }
+            if (mouseDownRef.current) {
+                mouseDragRef.current = true;
+                setBoard((b): boardType => updateCellOnDrag(rowIndex, columnIndex, b, toggleModeRef.current));
+            }
+        },
+        []
+    );
 
     // -------------------CALLBACKS FOR BOARD-LEVEL EVENTS-------------------------------
     const onBoardMouseDown = () => {
-        suppressMouseRef.current = true;
         mouseDownRef.current = true;
-        setTimeout(() => {
-            suppressMouseRef.current = false;
-        }, 50);
 
         //create a new event group/empties
         emptyEventGroup();
@@ -119,6 +129,8 @@ function Board(props: boardPropType) {
 
     const onBoardMouseUp = () => {
         mouseDownRef.current = false;
+        mouseDragRef.current = false;
+
         addGroupToStack(); //adds to the stack;
     };
 
@@ -161,10 +173,24 @@ function Board(props: boardPropType) {
                 style={{ "--grid-size": `repeat(${board.length}, 1fr)` } as React.CSSProperties}
                 onMouseDown={onBoardMouseDown}
                 onMouseUp={onBoardMouseUp}
+                onTouchEnd={e => {
+                    e.preventDefault();
+                    onBoardMouseUp();
+                }}
                 onMouseLeave={() => {
                     mouseDownRef.current = false;
                 }}
                 onMouseEnter={e => onBoardMouseEnter(e)}
+                onTouchMove={e => {
+                    const touch = e.touches[0];
+                    if (touch) {
+                        onBoardMouseEnter({
+                            buttons: 1,
+                            clientX: touch.clientX,
+                            clientY: touch.clientY,
+                        } as React.MouseEvent);
+                    }
+                }}
             >
                 {
                     // 2 layers of mapping
@@ -181,7 +207,9 @@ function Board(props: boardPropType) {
                                     leftBorder={cellBorder.leftBorder}
                                     topBorder={cellBorder.topBorder}
                                     updatePlayerStatusClick={() => onCellClick(rowIndex, columnIndex)}
-                                    updatePlayerStatusDrag={() => onCellDrag(rowIndex, columnIndex)}
+                                    updatePlayerStatusDrag={() =>
+                                        onCellDrag(board, rowIndex, columnIndex, invalidateModeRef)
+                                    }
                                 ></Cell>
                             );
                         })

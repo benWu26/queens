@@ -54,6 +54,14 @@ body {
     user-select: none;
     box-sizing: border-box;
     line-height: 0;
+    touch-action: none;
+}
+
+/* apply hover styling on mouse only */
+@media (hover: hover) {
+    .cell:hover {
+        filter: brightness(0.75) saturate(1.2) hue-rotate(10deg);
+    }
 }
 
 .symbol {
@@ -68,6 +76,11 @@ body {
     -webkit-user-drag: none;
     user-select: none;
     position: relative;
+}
+
+/* Prevent svgs from swallowing touch events */
+svg.symbol {
+    pointer-events: none;
 }
 
 .full-game {

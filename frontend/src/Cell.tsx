@@ -35,7 +35,6 @@ const colors = [
  * @returns {JSX.Element}
  */
 function Cell(props: cellPropType) {
-    console.log("cell re-rendered!");
     const style: React.CSSProperties = { backgroundColor: colors[props.color] };
 
     style.borderLeft = props.leftBorder ? "3px solid black" : "1px solid black";
@@ -47,10 +46,18 @@ function Cell(props: cellPropType) {
         <div
             className="cell"
             style={style}
-            onMouseDown={() => {
+            draggable
+            onMouseUp={() => {
+                props.updatePlayerStatusClick();
+            }}
+            onTouchEnd={() => {
                 props.updatePlayerStatusClick();
             }}
             onMouseEnter={() => {
+                props.updatePlayerStatusDrag();
+            }}
+            onDragStart={e => {
+                e.preventDefault();
                 props.updatePlayerStatusDrag();
             }}
         >
