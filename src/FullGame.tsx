@@ -8,7 +8,10 @@ function FullGame() {
     const [board, setBoard] = useState<boardType | null>(null);
     const [loading, setLoading] = useState(true);
     const [boardSize, setBoardSize] = useState(8);
-    const [autoPlace, setAutoPlace] = useState(false);
+    const [autoPlace, setAutoPlace] = useState(() => {
+        const saved = localStorage.getItem('autoPlace');
+        return saved ? JSON.parse(saved) : false; // Default to false if not set
+    });
 
     const generateBoard = useCallback(() => { 
         setLoading(true); 
@@ -22,6 +25,10 @@ function FullGame() {
     }, [boardSize]);
 
     useEffect(() => { generateBoard() }, [])
+
+    useEffect(() => {
+        localStorage.setItem('autoPlace', JSON.stringify(autoPlace));
+    }, [autoPlace]);
 
     return (
         <div className="full-game">
